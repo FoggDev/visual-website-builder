@@ -1,10 +1,14 @@
-"use client"
-import { ComponentLibrary } from "@/components/builder/component-library"
-import { Canvas } from "@/components/builder/canvas"
-import { PropertiesPanel } from "@/components/builder/properties-panel"
-import { Toolbar } from "@/components/builder/toolbar"
-import { BuilderProvider, useBuilder } from "@/components/builder/builder-context"
-import { FormStateProvider } from "@/components/builder/form-state-context"
+'use client'
+
+import {
+  BuilderProvider,
+  useBuilder
+} from '@/components/builder/builder-context'
+import { Canvas } from '@/components/builder/canvas'
+import { ComponentLibrary } from '@/components/builder/component-library'
+import { FormStateProvider } from '@/components/builder/form-state-context'
+import { PropertiesPanel } from '@/components/builder/properties-panel'
+import { Toolbar } from '@/components/builder/toolbar'
 
 function VisualBuilderContent() {
   const { state } = useBuilder()

@@ -1,41 +1,49 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { useBuilder, type RouteMapping } from "./builder-context"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Trash2, Plus, Globe } from "lucide-react"
-import { Switch } from "@/components/ui/switch"
+import { Globe, Plus, Trash2 } from 'lucide-react'
+import { useState } from 'react'
+
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
+
+import { useBuilder, type RouteMapping } from './builder-context'
 
 export function RoutingConfig() {
   const { state, dispatch } = useBuilder()
-  const [newPath, setNewPath] = useState("")
-  const [newPageId, setNewPageId] = useState("")
+  const [newPath, setNewPath] = useState('')
+  const [newPageId, setNewPageId] = useState('')
 
   const handleAddRoute = () => {
     if (!newPath || !newPageId) return
 
     const newRoute: RouteMapping = {
       id: Math.random().toString(36).substr(2, 9),
-      path: newPath.startsWith("/") ? newPath : `/${newPath}`,
+      path: newPath.startsWith('/') ? newPath : `/${newPath}`,
       pageId: newPageId,
-      isActive: true,
+      isActive: true
     }
 
-    dispatch({ type: "ADD_ROUTE_MAPPING", payload: { routeMapping: newRoute } })
-    setNewPath("")
-    setNewPageId("")
+    dispatch({ type: 'ADD_ROUTE_MAPPING', payload: { routeMapping: newRoute } })
+    setNewPath('')
+    setNewPageId('')
   }
 
   const handleUpdateRoute = (id: string, updates: Partial<RouteMapping>) => {
-    dispatch({ type: "UPDATE_ROUTE_MAPPING", payload: { id, updates } })
+    dispatch({ type: 'UPDATE_ROUTE_MAPPING', payload: { id, updates } })
   }
 
   const handleDeleteRoute = (id: string) => {
-    dispatch({ type: "DELETE_ROUTE_MAPPING", payload: { id } })
+    dispatch({ type: 'DELETE_ROUTE_MAPPING', payload: { id } })
   }
 
   return (
@@ -76,7 +84,11 @@ export function RoutingConfig() {
               </Select>
             </div>
           </div>
-          <Button onClick={handleAddRoute} disabled={!newPath || !newPageId} className="w-full">
+          <Button
+            onClick={handleAddRoute}
+            disabled={!newPath || !newPageId}
+            className="w-full"
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add Route
           </Button>
@@ -91,13 +103,18 @@ export function RoutingConfig() {
             state.routeMappings.map((route) => {
               const page = state.pages.find((p) => p.id === route.pageId)
               return (
-                <div key={route.id} className="flex items-center gap-4 p-3 border rounded-lg">
+                <div
+                  key={route.id}
+                  className="flex items-center gap-4 p-3 border rounded-lg"
+                >
                   <div className="flex-1 grid grid-cols-2 gap-4">
                     <div>
                       <Label className="text-xs text-gray-500">Path</Label>
                       <Input
                         value={route.path}
-                        onChange={(e) => handleUpdateRoute(route.id, { path: e.target.value })}
+                        onChange={(e) =>
+                          handleUpdateRoute(route.id, { path: e.target.value })
+                        }
                         className="h-8"
                       />
                     </div>
@@ -105,7 +122,9 @@ export function RoutingConfig() {
                       <Label className="text-xs text-gray-500">Points to</Label>
                       <Select
                         value={route.pageId}
-                        onValueChange={(value) => handleUpdateRoute(route.id, { pageId: value })}
+                        onValueChange={(value) =>
+                          handleUpdateRoute(route.id, { pageId: value })
+                        }
                       >
                         <SelectTrigger className="h-8">
                           <SelectValue />
@@ -123,7 +142,9 @@ export function RoutingConfig() {
                   <div className="flex items-center gap-2">
                     <Switch
                       checked={route.isActive}
-                      onCheckedChange={(checked) => handleUpdateRoute(route.id, { isActive: checked })}
+                      onCheckedChange={(checked) =>
+                        handleUpdateRoute(route.id, { isActive: checked })
+                      }
                     />
                     <Button
                       variant="ghost"
@@ -150,7 +171,9 @@ export function RoutingConfig() {
                 const page = state.pages.find((p) => p.id === route.pageId)
                 return (
                   <div key={route.id} className="flex justify-between">
-                    <code className="bg-gray-100 px-2 py-1 rounded">/preview{route.path}</code>
+                    <code className="bg-gray-100 px-2 py-1 rounded">
+                      /preview{route.path}
+                    </code>
                     <span>→ {page?.name}</span>
                   </div>
                 )

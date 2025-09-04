@@ -1,74 +1,89 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { useBuilder } from "./builder-context"
-import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Slider } from "@/components/ui/slider"
-import { Switch } from "@/components/ui/switch"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { getComponentTemplate } from "./component-templates"
-import { getComponentPosition } from "./builder-context"
 import {
-  Palette,
-  Type,
-  Layout,
-  Scaling as Spacing,
-  Monitor,
-  Tablet,
-  Smartphone,
-  AlignLeft,
   AlignCenter,
-  AlignRight,
   AlignJustify,
-  ArrowUp,
+  AlignLeft,
+  AlignRight,
   ArrowDown,
-  Send,
+  ArrowUp,
   CheckCircle,
-  XCircle,
-  Loader2,
-  Trash2,
-  Plus,
-  Settings,
   FileText,
-} from "lucide-react"
-import { useFormState } from "./form-state-context"
-import { RoutingConfig } from "./routing-config"
+  Layout,
+  Loader2,
+  Monitor,
+  Palette,
+  Plus,
+  Send,
+  Settings,
+  Smartphone,
+  Scaling as Spacing,
+  Tablet,
+  Trash2,
+  Type,
+  XCircle
+} from 'lucide-react'
+import { useEffect, useState } from 'react'
+
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
+import { Slider } from '@/components/ui/slider'
+import { Switch } from '@/components/ui/switch'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Textarea } from '@/components/ui/textarea'
+
+import { getComponentPosition, useBuilder } from './builder-context'
+import { getComponentTemplate } from './component-templates'
+import { useFormState } from './form-state-context'
+import { RoutingConfig } from './routing-config'
 
 export function PropertiesPanel() {
   const { state, dispatch } = useBuilder()
   const { getFormState } = useFormState()
-  const [testResult, setTestResult] = useState<{ success: boolean; message: string; data?: any } | null>(null)
+  const [testResult, setTestResult] = useState<{
+    success: boolean
+    message: string
+    data?: any
+  } | null>(null)
   const [isTestingEndpoint, setIsTestingEndpoint] = useState(false)
 
-  const currentPage = state.pages.find((page) => page.id === state.currentPageId)
+  const currentPage = state.pages.find(
+    (page) => page.id === state.currentPageId
+  )
 
-  const updateCanvasBackground = (updates: Partial<typeof state.canvasBackground>) => {
+  const updateCanvasBackground = (
+    updates: Partial<typeof state.canvasBackground>
+  ) => {
     dispatch({
-      type: "UPDATE_CANVAS_BACKGROUND",
-      payload: { background: updates },
+      type: 'UPDATE_CANVAS_BACKGROUND',
+      payload: { background: updates }
     })
   }
 
   const updatePageProperty = (property: string, value: string) => {
     if (!currentPage) return
     dispatch({
-      type: "UPDATE_PAGE",
+      type: 'UPDATE_PAGE',
       payload: {
         pageId: currentPage.id,
-        updates: { [property]: value },
-      },
+        updates: { [property]: value }
+      }
     })
   }
 
   const testFormEndpoint = async (formComponent: any) => {
     if (!formComponent.content.action) {
-      setTestResult({ success: false, message: "No endpoint URL specified" })
+      setTestResult({ success: false, message: 'No endpoint URL specified' })
       return
     }
 
@@ -77,20 +92,20 @@ export function PropertiesPanel() {
 
     try {
       const formData = getFormState(formComponent.id) || {}
-      const method = formComponent.content.method || "POST"
+      const method = formComponent.content.method || 'POST'
 
-      console.log("[v0] Testing form endpoint:", {
+      console.log('[v0] Testing form endpoint:', {
         url: formComponent.content.action,
         method,
-        data: formData,
+        data: formData
       })
 
       const response = await fetch(formComponent.content.action, {
         method,
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json'
         },
-        body: method !== "GET" ? JSON.stringify(formData) : undefined,
+        body: method !== 'GET' ? JSON.stringify(formData) : undefined
       })
 
       const responseData = await response.text()
@@ -100,13 +115,13 @@ export function PropertiesPanel() {
         message: response.ok
           ? `Success! ${response.status} ${response.statusText}`
           : `Error: ${response.status} ${response.statusText}`,
-        data: responseData,
+        data: responseData
       })
     } catch (error) {
-      console.error("[v0] Form endpoint test error:", error)
+      console.error('[v0] Form endpoint test error:', error)
       setTestResult({
         success: false,
-        message: `Network error: ${error instanceof Error ? error.message : "Unknown error"}`,
+        message: `Network error: ${error instanceof Error ? error.message : 'Unknown error'}`
       })
     } finally {
       setIsTestingEndpoint(false)
@@ -127,68 +142,90 @@ export function PropertiesPanel() {
   }
 
   const selectedComponent = state.selectedComponentId
-    ? findComponentById(currentPage?.components || [], state.selectedComponentId)
+    ? findComponentById(
+        currentPage?.components || [],
+        state.selectedComponentId
+      )
     : null
 
-  const template = selectedComponent ? getComponentTemplate(selectedComponent.type) : null
+  const template = selectedComponent
+    ? getComponentTemplate(selectedComponent.type)
+    : null
 
   useEffect(() => {
     if (selectedComponent) {
-      console.log("[v0] Selected component:", selectedComponent)
-      console.log("[v0] Component type:", selectedComponent.type)
-      console.log("[v0] Template found:", template)
-      console.log("[v0] Template properties:", template?.properties)
+      console.log('[v0] Selected component:', selectedComponent)
+      console.log('[v0] Component type:', selectedComponent.type)
+      console.log('[v0] Template found:', template)
+      console.log('[v0] Template properties:', template?.properties)
     }
   }, [selectedComponent, template])
 
   useEffect(() => {
-    console.log("[v0] Properties panel render - selectedComponentId:", state.selectedComponentId)
-    console.log("[v0] Properties panel render - selectedComponent:", selectedComponent)
-    console.log("[v0] Properties panel render - template:", template)
+    console.log(
+      '[v0] Properties panel render - selectedComponentId:',
+      state.selectedComponentId
+    )
+    console.log(
+      '[v0] Properties panel render - selectedComponent:',
+      selectedComponent
+    )
+    console.log('[v0] Properties panel render - template:', template)
   }, [state.selectedComponentId, selectedComponent, template])
 
-  const moveComponent = (direction: "up" | "down") => {
+  const moveComponent = (direction: 'up' | 'down') => {
     if (!selectedComponent) return
 
-    const position = getComponentPosition(state.components, selectedComponent.id)
+    const position = getComponentPosition(
+      state.components,
+      selectedComponent.id
+    )
     if (!position) return
 
-    const newIndex = direction === "up" ? position.index - 1 : position.index + 1
+    const newIndex =
+      direction === 'up' ? position.index - 1 : position.index + 1
     if (newIndex < 0 || newIndex >= position.total) return
 
-    console.log("[v0] Moving component:", {
+    console.log('[v0] Moving component:', {
       componentId: selectedComponent.id,
       direction,
       currentIndex: position.index,
       newIndex,
       totalComponents: position.total,
-      parentId: position.parentId,
+      parentId: position.parentId
     })
 
     dispatch({
-      type: "REORDER_COMPONENT",
+      type: 'REORDER_COMPONENT',
       payload: {
         componentId: selectedComponent.id,
         newIndex,
-        parentId: position.parentId,
-      },
+        parentId: position.parentId
+      }
     })
   }
 
   const updateComponent = (updates: any) => {
     if (!selectedComponent) return
-    console.log("[v0] Dispatching UPDATE_COMPONENT:", { id: selectedComponent.id, updates })
+    console.log('[v0] Dispatching UPDATE_COMPONENT:', {
+      id: selectedComponent.id,
+      updates
+    })
     dispatch({
-      type: "UPDATE_COMPONENT",
-      payload: { id: selectedComponent.id, updates },
+      type: 'UPDATE_COMPONENT',
+      payload: { id: selectedComponent.id, updates }
     })
   }
 
   const updateContent = (key: string, value: any) => {
     if (!selectedComponent) return
-    console.log("[v0] Updating content:", { key, value, componentId: selectedComponent.id })
+    console.log('[v0] Updating content:', {
+      key,
+      value,
+      componentId: selectedComponent.id
+    })
     updateComponent({
-      content: { ...selectedComponent.content, [key]: value },
+      content: { ...selectedComponent.content, [key]: value }
     })
   }
 
@@ -199,39 +236,58 @@ export function PropertiesPanel() {
         ...selectedComponent.styles,
         [state.currentBreakpoint]: {
           ...selectedComponent.styles[state.currentBreakpoint],
-          [key]: value,
-        },
-      },
+          [key]: value
+        }
+      }
     })
   }
 
-  const currentStyles = selectedComponent?.styles?.[state.currentBreakpoint] || {}
-  const position = selectedComponent ? getComponentPosition(state.components, selectedComponent.id) : null
+  const currentStyles =
+    selectedComponent?.styles?.[state.currentBreakpoint] || {}
+  const position = selectedComponent
+    ? getComponentPosition(state.components, selectedComponent.id)
+    : null
 
-  const findParentFormForComponent = (components: any[], componentId: string): any | null => {
+  const findParentFormForComponent = (
+    components: any[],
+    componentId: string
+  ): any | null => {
     for (const component of components) {
-      if (component.type === "form" && component.children) {
-        const found = findComponentInChildrenRecursive(component.children, componentId)
+      if (component.type === 'form' && component.children) {
+        const found = findComponentInChildrenRecursive(
+          component.children,
+          componentId
+        )
         if (found) return component
       }
       if (component.children) {
-        const found = findParentFormForComponent(component.children, componentId)
+        const found = findParentFormForComponent(
+          component.children,
+          componentId
+        )
         if (found) return found
       }
     }
     return null
   }
 
-  const findComponentInChildrenRecursive = (children: any[], componentId: string): boolean => {
+  const findComponentInChildrenRecursive = (
+    children: any[],
+    componentId: string
+  ): boolean => {
     for (const child of children) {
       if (child.id === componentId) return true
-      if (child.children && findComponentInChildrenRecursive(child.children, componentId)) return true
+      if (
+        child.children &&
+        findComponentInChildrenRecursive(child.children, componentId)
+      )
+        return true
     }
     return false
   }
 
   if (!state.selectedComponentId) {
-    console.log("[v0] Showing canvas settings - no component selected")
+    console.log('[v0] Showing canvas settings - no component selected')
     return (
       <div className="w-80 bg-card border-l border-border h-full flex flex-col">
         <div className="p-4 border-b border-border flex-shrink-0">
@@ -246,7 +302,9 @@ export function PropertiesPanel() {
             <Card className="p-4">
               <div className="flex items-center gap-2 mb-3">
                 <FileText className="h-4 w-4" />
-                <h3 className="text-sm font-medium text-foreground">Page Configuration</h3>
+                <h3 className="text-sm font-medium text-foreground">
+                  Page Configuration
+                </h3>
               </div>
 
               <div className="space-y-4">
@@ -254,8 +312,8 @@ export function PropertiesPanel() {
                   <Label htmlFor="page-name">Page Name</Label>
                   <Input
                     id="page-name"
-                    value={currentPage?.name || ""}
-                    onChange={(e) => updatePageProperty("name", e.target.value)}
+                    value={currentPage?.name || ''}
+                    onChange={(e) => updatePageProperty('name', e.target.value)}
                     placeholder="Page Name"
                     className="mt-1"
                   />
@@ -265,8 +323,8 @@ export function PropertiesPanel() {
                   <Label htmlFor="page-url">Page URL</Label>
                   <Input
                     id="page-url"
-                    value={currentPage?.url || ""}
-                    onChange={(e) => updatePageProperty("url", e.target.value)}
+                    value={currentPage?.url || ''}
+                    onChange={(e) => updatePageProperty('url', e.target.value)}
                     placeholder="/page-url"
                     className="mt-1"
                   />
@@ -281,7 +339,8 @@ export function PropertiesPanel() {
                       <strong>Page ID:</strong> {currentPage?.id}
                     </div>
                     <div>
-                      <strong>Components:</strong> {currentPage?.components.length || 0}
+                      <strong>Components:</strong>{' '}
+                      {currentPage?.components.length || 0}
                     </div>
                   </div>
                 </div>
@@ -291,7 +350,9 @@ export function PropertiesPanel() {
             <Card className="p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Palette className="h-4 w-4" />
-                <h3 className="text-sm font-medium text-foreground">Canvas Background</h3>
+                <h3 className="text-sm font-medium text-foreground">
+                  Canvas Background
+                </h3>
               </div>
 
               <div className="space-y-4">
@@ -299,7 +360,9 @@ export function PropertiesPanel() {
                   <Label>Background Type</Label>
                   <Select
                     value={state.canvasBackground.type}
-                    onValueChange={(value: "color" | "image") => updateCanvasBackground({ type: value })}
+                    onValueChange={(value: 'color' | 'image') =>
+                      updateCanvasBackground({ type: value })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -311,19 +374,23 @@ export function PropertiesPanel() {
                   </Select>
                 </div>
 
-                {state.canvasBackground.type === "color" && (
+                {state.canvasBackground.type === 'color' && (
                   <div>
                     <Label>Background Color</Label>
                     <div className="flex gap-2 mt-1">
                       <Input
                         type="color"
                         value={state.canvasBackground.color}
-                        onChange={(e) => updateCanvasBackground({ color: e.target.value })}
+                        onChange={(e) =>
+                          updateCanvasBackground({ color: e.target.value })
+                        }
                         className="w-12 h-8 p-1 border rounded"
                       />
                       <Input
                         value={state.canvasBackground.color}
-                        onChange={(e) => updateCanvasBackground({ color: e.target.value })}
+                        onChange={(e) =>
+                          updateCanvasBackground({ color: e.target.value })
+                        }
                         placeholder="#ffffff"
                         className="flex-1"
                       />
@@ -331,13 +398,15 @@ export function PropertiesPanel() {
                   </div>
                 )}
 
-                {state.canvasBackground.type === "image" && (
+                {state.canvasBackground.type === 'image' && (
                   <>
                     <div>
                       <Label>Image URL</Label>
                       <Input
-                        value={state.canvasBackground.image || ""}
-                        onChange={(e) => updateCanvasBackground({ image: e.target.value })}
+                        value={state.canvasBackground.image || ''}
+                        onChange={(e) =>
+                          updateCanvasBackground({ image: e.target.value })
+                        }
                         placeholder="https://example.com/image.jpg"
                         className="mt-1"
                       />
@@ -347,9 +416,9 @@ export function PropertiesPanel() {
                       <Label>Image Size</Label>
                       <Select
                         value={state.canvasBackground.imageSize}
-                        onValueChange={(value: "cover" | "contain" | "repeat") =>
-                          updateCanvasBackground({ imageSize: value })
-                        }
+                        onValueChange={(
+                          value: 'cover' | 'contain' | 'repeat'
+                        ) => updateCanvasBackground({ imageSize: value })}
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -366,9 +435,9 @@ export function PropertiesPanel() {
                       <Label>Image Position</Label>
                       <Select
                         value={state.canvasBackground.imagePosition}
-                        onValueChange={(value: "center" | "top" | "bottom" | "left" | "right") =>
-                          updateCanvasBackground({ imagePosition: value })
-                        }
+                        onValueChange={(
+                          value: 'center' | 'top' | 'bottom' | 'left' | 'right'
+                        ) => updateCanvasBackground({ imagePosition: value })}
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -391,8 +460,8 @@ export function PropertiesPanel() {
 
             <div className="mt-4 p-4 bg-muted rounded-lg">
               <p className="text-sm text-muted-foreground">
-                Select a component to edit its properties, or use the canvas background settings above to customize the
-                page background.
+                Select a component to edit its properties, or use the canvas
+                background settings above to customize the page background.
               </p>
             </div>
           </div>
@@ -401,18 +470,27 @@ export function PropertiesPanel() {
     )
   }
 
-  console.log("[v0] Showing properties panel for component:", selectedComponent?.type, selectedComponent?.id)
+  console.log(
+    '[v0] Showing properties panel for component:',
+    selectedComponent?.type,
+    selectedComponent?.id
+  )
 
-  const isFormComponent = selectedComponent.type === "form"
+  const isFormComponent = selectedComponent.type === 'form'
   const currentPageComponents = currentPage?.components || []
-  const parentForm = findParentFormForComponent(currentPageComponents, selectedComponent.id)
+  const parentForm = findParentFormForComponent(
+    currentPageComponents,
+    selectedComponent.id
+  )
   const formState = isFormComponent ? getFormState(selectedComponent.id) : null
 
   return (
     <div className="w-80 bg-sidebar border-l border-sidebar-border h-full flex flex-col overflow-hidden">
       <div className="p-4 border-b border-sidebar-border flex-shrink-0">
         <div className="flex items-center justify-between mb-2">
-          <h2 className="text-lg font-semibold text-sidebar-foreground">Properties</h2>
+          <h2 className="text-lg font-semibold text-sidebar-foreground">
+            Properties
+          </h2>
           <Badge variant="secondary" className="capitalize">
             {selectedComponent.type}
           </Badge>
@@ -420,10 +498,18 @@ export function PropertiesPanel() {
 
         {/* Breakpoint Indicator */}
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          {state.currentBreakpoint === "desktop" && <Monitor className="h-4 w-4" />}
-          {state.currentBreakpoint === "tablet" && <Tablet className="h-4 w-4" />}
-          {state.currentBreakpoint === "mobile" && <Smartphone className="h-4 w-4" />}
-          <span className="capitalize">Editing {state.currentBreakpoint} styles</span>
+          {state.currentBreakpoint === 'desktop' && (
+            <Monitor className="h-4 w-4" />
+          )}
+          {state.currentBreakpoint === 'tablet' && (
+            <Tablet className="h-4 w-4" />
+          )}
+          {state.currentBreakpoint === 'mobile' && (
+            <Smartphone className="h-4 w-4" />
+          )}
+          <span className="capitalize">
+            Editing {state.currentBreakpoint} styles
+          </span>
         </div>
       </div>
 
@@ -441,18 +527,24 @@ export function PropertiesPanel() {
                 <Card className="p-4 bg-blue-50 border-blue-200">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="h-4 w-4 bg-blue-500 rounded-full"></div>
-                    <h3 className="text-sm font-medium text-blue-900">Form State</h3>
+                    <h3 className="text-sm font-medium text-blue-900">
+                      Form State
+                    </h3>
                   </div>
 
                   {formState && Object.keys(formState).length > 0 ? (
                     <div className="space-y-2">
-                      <div className="text-xs text-blue-700 mb-2">Live form data (JSON):</div>
+                      <div className="text-xs text-blue-700 mb-2">
+                        Live form data (JSON):
+                      </div>
                       <pre className="text-xs text-blue-800 bg-white p-3 rounded border overflow-auto max-h-40 font-mono">
                         {JSON.stringify(formState, null, 2)}
                       </pre>
                     </div>
                   ) : (
-                    <div className="text-xs text-blue-600">No form data yet. Add form fields and start typing!</div>
+                    <div className="text-xs text-blue-600">
+                      No form data yet. Add form fields and start typing!
+                    </div>
                   )}
                 </Card>
               )}
@@ -461,17 +553,23 @@ export function PropertiesPanel() {
                 <Card className="p-4 bg-green-50 border-green-200">
                   <div className="flex items-center gap-2 mb-3">
                     <Send className="h-4 w-4 text-green-600" />
-                    <h3 className="text-sm font-medium text-green-900">Form Submit Testing</h3>
+                    <h3 className="text-sm font-medium text-green-900">
+                      Form Submit Testing
+                    </h3>
                   </div>
 
                   <div className="space-y-3">
-                    <div className="text-xs text-green-700">Test your form endpoint with current form data</div>
+                    <div className="text-xs text-green-700">
+                      Test your form endpoint with current form data
+                    </div>
 
                     <div className="flex gap-2">
                       <Button
                         size="sm"
                         onClick={() => testFormEndpoint(selectedComponent)}
-                        disabled={isTestingEndpoint || !selectedComponent.content.action}
+                        disabled={
+                          isTestingEndpoint || !selectedComponent.content.action
+                        }
                         className="flex-1"
                       >
                         {isTestingEndpoint ? (
@@ -492,8 +590,8 @@ export function PropertiesPanel() {
                       <div
                         className={`p-3 rounded-md text-xs ${
                           testResult.success
-                            ? "bg-green-100 border border-green-300 text-green-800"
-                            : "bg-red-100 border border-red-300 text-red-800"
+                            ? 'bg-green-100 border border-green-300 text-green-800'
+                            : 'bg-red-100 border border-red-300 text-red-800'
                         }`}
                       >
                         <div className="flex items-center gap-2 mb-2">
@@ -502,7 +600,9 @@ export function PropertiesPanel() {
                           ) : (
                             <XCircle className="h-3 w-3 text-red-600" />
                           )}
-                          <span className="font-medium">{testResult.message}</span>
+                          <span className="font-medium">
+                            {testResult.message}
+                          </span>
                         </div>
                         {testResult.data && (
                           <div className="mt-2">
@@ -516,11 +616,16 @@ export function PropertiesPanel() {
                     )}
 
                     <div className="text-xs text-green-600">
-                      <strong>Endpoint:</strong> {selectedComponent.content.action || "Not set"}
+                      <strong>Endpoint:</strong>{' '}
+                      {selectedComponent.content.action || 'Not set'}
                       <br />
-                      <strong>Method:</strong> {selectedComponent.content.method || "POST"}
+                      <strong>Method:</strong>{' '}
+                      {selectedComponent.content.method || 'POST'}
                       <br />
-                      <strong>Data:</strong> {formState ? Object.keys(formState).length + " fields" : "No data"}
+                      <strong>Data:</strong>{' '}
+                      {formState
+                        ? Object.keys(formState).length + ' fields'
+                        : 'No data'}
                     </div>
                   </div>
                 </Card>
@@ -529,7 +634,9 @@ export function PropertiesPanel() {
               <Card className="p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Type className="h-4 w-4" />
-                  <h3 className="text-sm font-medium text-foreground">Content Properties</h3>
+                  <h3 className="text-sm font-medium text-foreground">
+                    Content Properties
+                  </h3>
                 </div>
 
                 {/* Dynamic content controls based on component template */}
@@ -537,29 +644,38 @@ export function PropertiesPanel() {
                   <div key={property.key} className="space-y-2 mb-4">
                     <Label htmlFor={property.key}>{property.label}</Label>
 
-                    {property.type === "text" && (
+                    {property.type === 'text' && (
                       <Input
                         id={property.key}
-                        value={selectedComponent.content[property.key] || ""}
-                        onChange={(e) => updateContent(property.key, e.target.value)}
+                        value={selectedComponent.content[property.key] || ''}
+                        onChange={(e) =>
+                          updateContent(property.key, e.target.value)
+                        }
                         placeholder={property.placeholder}
                       />
                     )}
 
-                    {property.type === "textarea" && (
+                    {property.type === 'textarea' && (
                       <Textarea
                         id={property.key}
-                        value={selectedComponent.content[property.key] || ""}
-                        onChange={(e) => updateContent(property.key, e.target.value)}
+                        value={selectedComponent.content[property.key] || ''}
+                        onChange={(e) =>
+                          updateContent(property.key, e.target.value)
+                        }
                         placeholder={property.placeholder}
                         rows={3}
                       />
                     )}
 
-                    {property.type === "select" && property.options && (
+                    {property.type === 'select' && property.options && (
                       <Select
-                        value={selectedComponent.content[property.key] || property.options[0]}
-                        onValueChange={(value) => updateContent(property.key, value)}
+                        value={
+                          selectedComponent.content[property.key] ||
+                          property.options[0]
+                        }
+                        onValueChange={(value) =>
+                          updateContent(property.key, value)
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -574,187 +690,273 @@ export function PropertiesPanel() {
                       </Select>
                     )}
 
-                    {selectedComponent.type === "select" && property.key === "options" && (
-                      <div className="space-y-3">
-                        <div className="text-sm font-medium">Select Options</div>
-                        {(selectedComponent.content.options || []).map((option: any, index: number) => (
-                          <div key={index} className="flex gap-2 items-center p-3 bg-gray-50 rounded-lg">
-                            <div className="flex-1 space-y-2">
-                              <Input
-                                placeholder="Display text"
-                                value={option.text || ""}
-                                onChange={(e) => {
-                                  const newOptions = [...(selectedComponent.content.options || [])]
-                                  newOptions[index] = { ...newOptions[index], text: e.target.value }
-                                  updateContent("options", newOptions)
-                                }}
-                              />
-                              <Input
-                                placeholder="Value"
-                                value={option.value || ""}
-                                onChange={(e) => {
-                                  const newOptions = [...(selectedComponent.content.options || [])]
-                                  newOptions[index] = { ...newOptions[index], value: e.target.value }
-                                  updateContent("options", newOptions)
-                                }}
-                              />
-                            </div>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                const newOptions = [...(selectedComponent.content.options || [])]
-                                newOptions.splice(index, 1)
-                                updateContent("options", newOptions)
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                    {selectedComponent.type === 'select' &&
+                      property.key === 'options' && (
+                        <div className="space-y-3">
+                          <div className="text-sm font-medium">
+                            Select Options
                           </div>
-                        ))}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            const newOptions = [...(selectedComponent.content.options || []), { text: "", value: "" }]
-                            updateContent("options", newOptions)
-                          }}
-                          className="w-full"
-                        >
-                          <Plus className="h-4 w-4 mr-2" />
-                          Add Option
-                        </Button>
-                      </div>
-                    )}
+                          {(selectedComponent.content.options || []).map(
+                            (option: any, index: number) => (
+                              <div
+                                key={index}
+                                className="flex gap-2 items-center p-3 bg-gray-50 rounded-lg"
+                              >
+                                <div className="flex-1 space-y-2">
+                                  <Input
+                                    placeholder="Display text"
+                                    value={option.text || ''}
+                                    onChange={(e) => {
+                                      const newOptions = [
+                                        ...(selectedComponent.content.options ||
+                                          [])
+                                      ]
+                                      newOptions[index] = {
+                                        ...newOptions[index],
+                                        text: e.target.value
+                                      }
+                                      updateContent('options', newOptions)
+                                    }}
+                                  />
+                                  <Input
+                                    placeholder="Value"
+                                    value={option.value || ''}
+                                    onChange={(e) => {
+                                      const newOptions = [
+                                        ...(selectedComponent.content.options ||
+                                          [])
+                                      ]
+                                      newOptions[index] = {
+                                        ...newOptions[index],
+                                        value: e.target.value
+                                      }
+                                      updateContent('options', newOptions)
+                                    }}
+                                  />
+                                </div>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    const newOptions = [
+                                      ...(selectedComponent.content.options ||
+                                        [])
+                                    ]
+                                    newOptions.splice(index, 1)
+                                    updateContent('options', newOptions)
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            )
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const newOptions = [
+                                ...(selectedComponent.content.options || []),
+                                { text: '', value: '' }
+                              ]
+                              updateContent('options', newOptions)
+                            }}
+                            className="w-full"
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add Option
+                          </Button>
+                        </div>
+                      )}
 
-                    {selectedComponent.type === "radiogroup" && property.key === "options" && (
-                      <div className="space-y-3">
-                        <div className="text-sm font-medium">Radio Options</div>
-                        {(selectedComponent.content.options || []).map((option: any, index: number) => (
-                          <div key={index} className="flex gap-2 items-center p-3 bg-gray-50 rounded-lg">
-                            <div className="flex-1 space-y-2">
-                              <Input
-                                placeholder="Display text"
-                                value={option.text || ""}
-                                onChange={(e) => {
-                                  const newOptions = [...(selectedComponent.content.options || [])]
-                                  newOptions[index] = { ...newOptions[index], text: e.target.value }
-                                  updateContent("options", newOptions)
-                                }}
-                              />
-                              <Input
-                                placeholder="Value"
-                                value={option.value || ""}
-                                onChange={(e) => {
-                                  const newOptions = [...(selectedComponent.content.options || [])]
-                                  newOptions[index] = { ...newOptions[index], value: e.target.value }
-                                  updateContent("options", newOptions)
-                                }}
-                              />
-                            </div>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                const newOptions = [...(selectedComponent.content.options || [])]
-                                newOptions.splice(index, 1)
-                                updateContent("options", newOptions)
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                    {selectedComponent.type === 'radiogroup' &&
+                      property.key === 'options' && (
+                        <div className="space-y-3">
+                          <div className="text-sm font-medium">
+                            Radio Options
                           </div>
-                        ))}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            const newOptions = [...(selectedComponent.content.options || []), { text: "", value: "" }]
-                            updateContent("options", newOptions)
-                          }}
-                          className="w-full"
-                        >
-                          <Plus className="h-4 w-4 mr-2" />
-                          Add Option
-                        </Button>
-                      </div>
-                    )}
+                          {(selectedComponent.content.options || []).map(
+                            (option: any, index: number) => (
+                              <div
+                                key={index}
+                                className="flex gap-2 items-center p-3 bg-gray-50 rounded-lg"
+                              >
+                                <div className="flex-1 space-y-2">
+                                  <Input
+                                    placeholder="Display text"
+                                    value={option.text || ''}
+                                    onChange={(e) => {
+                                      const newOptions = [
+                                        ...(selectedComponent.content.options ||
+                                          [])
+                                      ]
+                                      newOptions[index] = {
+                                        ...newOptions[index],
+                                        text: e.target.value
+                                      }
+                                      updateContent('options', newOptions)
+                                    }}
+                                  />
+                                  <Input
+                                    placeholder="Value"
+                                    value={option.value || ''}
+                                    onChange={(e) => {
+                                      const newOptions = [
+                                        ...(selectedComponent.content.options ||
+                                          [])
+                                      ]
+                                      newOptions[index] = {
+                                        ...newOptions[index],
+                                        value: e.target.value
+                                      }
+                                      updateContent('options', newOptions)
+                                    }}
+                                  />
+                                </div>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    const newOptions = [
+                                      ...(selectedComponent.content.options ||
+                                        [])
+                                    ]
+                                    newOptions.splice(index, 1)
+                                    updateContent('options', newOptions)
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            )
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const newOptions = [
+                                ...(selectedComponent.content.options || []),
+                                { text: '', value: '' }
+                              ]
+                              updateContent('options', newOptions)
+                            }}
+                            className="w-full"
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add Option
+                          </Button>
+                        </div>
+                      )}
 
-                    {selectedComponent.type === "navbar" && property.key === "menuItems" && (
-                      <div className="space-y-3">
-                        <div className="text-sm font-medium">Menu Items</div>
-                        {(selectedComponent.content.menuItems || []).map((item: any, index: number) => (
-                          <div key={index} className="flex gap-2 items-center p-3 bg-gray-50 rounded-lg">
-                            <div className="flex-1 space-y-2">
-                              <Input
-                                placeholder="Menu text"
-                                value={item.text || ""}
-                                onChange={(e) => {
-                                  const newItems = [...(selectedComponent.content.menuItems || [])]
-                                  newItems[index] = { ...newItems[index], text: e.target.value }
-                                  updateContent("menuItems", newItems)
-                                }}
-                              />
-                              <Input
-                                placeholder="Link URL"
-                                value={item.href || ""}
-                                onChange={(e) => {
-                                  const newItems = [...(selectedComponent.content.menuItems || [])]
-                                  newItems[index] = { ...newItems[index], href: e.target.value }
-                                  updateContent("menuItems", newItems)
-                                }}
-                              />
-                            </div>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                const newItems = [...(selectedComponent.content.menuItems || [])]
-                                newItems.splice(index, 1)
-                                updateContent("menuItems", newItems)
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            const newItems = [...(selectedComponent.content.menuItems || []), { text: "", href: "" }]
-                            updateContent("menuItems", newItems)
-                          }}
-                          className="w-full"
-                        >
-                          <Plus className="h-4 w-4 mr-2" />
-                          Add Menu Item
-                        </Button>
-                      </div>
-                    )}
+                    {selectedComponent.type === 'navbar' &&
+                      property.key === 'menuItems' && (
+                        <div className="space-y-3">
+                          <div className="text-sm font-medium">Menu Items</div>
+                          {(selectedComponent.content.menuItems || []).map(
+                            (item: any, index: number) => (
+                              <div
+                                key={index}
+                                className="flex gap-2 items-center p-3 bg-gray-50 rounded-lg"
+                              >
+                                <div className="flex-1 space-y-2">
+                                  <Input
+                                    placeholder="Menu text"
+                                    value={item.text || ''}
+                                    onChange={(e) => {
+                                      const newItems = [
+                                        ...(selectedComponent.content
+                                          .menuItems || [])
+                                      ]
+                                      newItems[index] = {
+                                        ...newItems[index],
+                                        text: e.target.value
+                                      }
+                                      updateContent('menuItems', newItems)
+                                    }}
+                                  />
+                                  <Input
+                                    placeholder="Link URL"
+                                    value={item.href || ''}
+                                    onChange={(e) => {
+                                      const newItems = [
+                                        ...(selectedComponent.content
+                                          .menuItems || [])
+                                      ]
+                                      newItems[index] = {
+                                        ...newItems[index],
+                                        href: e.target.value
+                                      }
+                                      updateContent('menuItems', newItems)
+                                    }}
+                                  />
+                                </div>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    const newItems = [
+                                      ...(selectedComponent.content.menuItems ||
+                                        [])
+                                    ]
+                                    newItems.splice(index, 1)
+                                    updateContent('menuItems', newItems)
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            )
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const newItems = [
+                                ...(selectedComponent.content.menuItems || []),
+                                { text: '', href: '' }
+                              ]
+                              updateContent('menuItems', newItems)
+                            }}
+                            className="w-full"
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add Menu Item
+                          </Button>
+                        </div>
+                      )}
 
-                    {property.type === "url" && (
+                    {property.type === 'url' && (
                       <Input
                         id={property.key}
                         type="url"
-                        value={selectedComponent.content[property.key] || ""}
-                        onChange={(e) => updateContent(property.key, e.target.value)}
+                        value={selectedComponent.content[property.key] || ''}
+                        onChange={(e) =>
+                          updateContent(property.key, e.target.value)
+                        }
                         placeholder={property.placeholder}
                       />
                     )}
 
-                    {property.type === "boolean" && (
+                    {property.type === 'boolean' && (
                       <div className="flex items-center space-x-2">
                         <Switch
                           id={property.key}
-                          checked={selectedComponent.content[property.key] || false}
-                          onCheckedChange={(checked) => updateContent(property.key, checked)}
+                          checked={
+                            selectedComponent.content[property.key] || false
+                          }
+                          onCheckedChange={(checked) =>
+                            updateContent(property.key, checked)
+                          }
                         />
                         <Label htmlFor={property.key}>{property.label}</Label>
                       </div>
                     )}
 
-                    {property.description && <p className="text-xs text-muted-foreground">{property.description}</p>}
+                    {property.description && (
+                      <p className="text-xs text-muted-foreground">
+                        {property.description}
+                      </p>
+                    )}
                   </div>
                 ))}
               </Card>
@@ -762,11 +964,14 @@ export function PropertiesPanel() {
 
             <TabsContent value="style" className="space-y-4 mt-4">
               {/* Typography Controls */}
-              {(selectedComponent.type === "heading" || selectedComponent.type === "paragraph") && (
+              {(selectedComponent.type === 'heading' ||
+                selectedComponent.type === 'paragraph') && (
                 <Card className="p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <Type className="h-4 w-4" />
-                    <h3 className="text-sm font-medium text-foreground">Typography</h3>
+                    <h3 className="text-sm font-medium text-foreground">
+                      Typography
+                    </h3>
                   </div>
 
                   <div className="space-y-4">
@@ -774,15 +979,24 @@ export function PropertiesPanel() {
                       <Label>Font Size</Label>
                       <div className="flex items-center gap-2 mt-1">
                         <Slider
-                          value={[Number.parseInt(currentStyles.fontSize?.replace("rem", "") || "1") * 16]}
-                          onValueChange={([value]) => updateStyle("fontSize", `${value / 16}rem`)}
+                          value={[
+                            Number.parseInt(
+                              currentStyles.fontSize?.replace('rem', '') || '1'
+                            ) * 16
+                          ]}
+                          onValueChange={([value]) =>
+                            updateStyle('fontSize', `${value / 16}rem`)
+                          }
                           max={72}
                           min={12}
                           step={2}
                           className="flex-1"
                         />
                         <span className="text-xs text-muted-foreground w-12">
-                          {Number.parseInt(currentStyles.fontSize?.replace("rem", "") || "1") * 16}px
+                          {Number.parseInt(
+                            currentStyles.fontSize?.replace('rem', '') || '1'
+                          ) * 16}
+                          px
                         </span>
                       </div>
                     </div>
@@ -790,8 +1004,10 @@ export function PropertiesPanel() {
                     <div>
                       <Label>Font Weight</Label>
                       <Select
-                        value={currentStyles.fontWeight || "400"}
-                        onValueChange={(value) => updateStyle("fontWeight", value)}
+                        value={currentStyles.fontWeight || '400'}
+                        onValueChange={(value) =>
+                          updateStyle('fontWeight', value)
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -811,16 +1027,20 @@ export function PropertiesPanel() {
                       <Label>Text Alignment</Label>
                       <div className="flex gap-1 mt-1">
                         {[
-                          { value: "left", icon: AlignLeft },
-                          { value: "center", icon: AlignCenter },
-                          { value: "right", icon: AlignRight },
-                          { value: "justify", icon: AlignJustify },
+                          { value: 'left', icon: AlignLeft },
+                          { value: 'center', icon: AlignCenter },
+                          { value: 'right', icon: AlignRight },
+                          { value: 'justify', icon: AlignJustify }
                         ].map(({ value, icon: Icon }) => (
                           <Button
                             key={value}
-                            variant={currentStyles.textAlign === value ? "default" : "outline"}
+                            variant={
+                              currentStyles.textAlign === value
+                                ? 'default'
+                                : 'outline'
+                            }
                             size="sm"
-                            onClick={() => updateStyle("textAlign", value)}
+                            onClick={() => updateStyle('textAlign', value)}
                             className="p-2"
                           >
                             <Icon className="h-4 w-4" />
@@ -836,7 +1056,9 @@ export function PropertiesPanel() {
               <Card className="p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Palette className="h-4 w-4" />
-                  <h3 className="text-sm font-medium text-foreground">Colors</h3>
+                  <h3 className="text-sm font-medium text-foreground">
+                    Colors
+                  </h3>
                 </div>
 
                 <div className="space-y-4">
@@ -845,13 +1067,13 @@ export function PropertiesPanel() {
                     <div className="flex gap-2 mt-1">
                       <Input
                         type="color"
-                        value={currentStyles.color || "#000000"}
-                        onChange={(e) => updateStyle("color", e.target.value)}
+                        value={currentStyles.color || '#000000'}
+                        onChange={(e) => updateStyle('color', e.target.value)}
                         className="w-12 h-8 p-1 border rounded"
                       />
                       <Input
-                        value={currentStyles.color || "#000000"}
-                        onChange={(e) => updateStyle("color", e.target.value)}
+                        value={currentStyles.color || '#000000'}
+                        onChange={(e) => updateStyle('color', e.target.value)}
                         placeholder="#000000"
                         className="flex-1"
                       />
@@ -863,13 +1085,17 @@ export function PropertiesPanel() {
                     <div className="flex gap-2 mt-1">
                       <Input
                         type="color"
-                        value={currentStyles.backgroundColor || "#ffffff"}
-                        onChange={(e) => updateStyle("backgroundColor", e.target.value)}
+                        value={currentStyles.backgroundColor || '#ffffff'}
+                        onChange={(e) =>
+                          updateStyle('backgroundColor', e.target.value)
+                        }
                         className="w-12 h-8 p-1 border rounded"
                       />
                       <Input
-                        value={currentStyles.backgroundColor || "#ffffff"}
-                        onChange={(e) => updateStyle("backgroundColor", e.target.value)}
+                        value={currentStyles.backgroundColor || '#ffffff'}
+                        onChange={(e) =>
+                          updateStyle('backgroundColor', e.target.value)
+                        }
                         placeholder="#ffffff"
                         className="flex-1"
                       />
@@ -880,22 +1106,33 @@ export function PropertiesPanel() {
 
               {/* Border & Effects */}
               <Card className="p-4">
-                <h3 className="text-sm font-medium text-foreground mb-3">Border & Effects</h3>
+                <h3 className="text-sm font-medium text-foreground mb-3">
+                  Border & Effects
+                </h3>
 
                 <div className="space-y-4">
                   <div>
                     <Label>Border Radius</Label>
                     <div className="flex items-center gap-2 mt-1">
                       <Slider
-                        value={[Number.parseInt(currentStyles.borderRadius?.replace("px", "") || "0")]}
-                        onValueChange={([value]) => updateStyle("borderRadius", `${value}px`)}
+                        value={[
+                          Number.parseInt(
+                            currentStyles.borderRadius?.replace('px', '') || '0'
+                          )
+                        ]}
+                        onValueChange={([value]) =>
+                          updateStyle('borderRadius', `${value}px`)
+                        }
                         max={50}
                         min={0}
                         step={1}
                         className="flex-1"
                       />
                       <span className="text-xs text-muted-foreground w-12">
-                        {Number.parseInt(currentStyles.borderRadius?.replace("px", "") || "0")}px
+                        {Number.parseInt(
+                          currentStyles.borderRadius?.replace('px', '') || '0'
+                        )}
+                        px
                       </span>
                     </div>
                   </div>
@@ -904,32 +1141,47 @@ export function PropertiesPanel() {
                     <Label>Border Width</Label>
                     <div className="flex items-center gap-2 mt-1">
                       <Slider
-                        value={[Number.parseInt(currentStyles.borderWidth?.replace("px", "") || "0")]}
-                        onValueChange={([value]) => updateStyle("borderWidth", `${value}px`)}
+                        value={[
+                          Number.parseInt(
+                            currentStyles.borderWidth?.replace('px', '') || '0'
+                          )
+                        ]}
+                        onValueChange={([value]) =>
+                          updateStyle('borderWidth', `${value}px`)
+                        }
                         max={10}
                         min={0}
                         step={1}
                         className="flex-1"
                       />
                       <span className="text-xs text-muted-foreground w-12">
-                        {Number.parseInt(currentStyles.borderWidth?.replace("px", "") || "0")}px
+                        {Number.parseInt(
+                          currentStyles.borderWidth?.replace('px', '') || '0'
+                        )}
+                        px
                       </span>
                     </div>
                   </div>
 
-                  {Number.parseInt(currentStyles.borderWidth?.replace("px", "") || "0") > 0 && (
+                  {Number.parseInt(
+                    currentStyles.borderWidth?.replace('px', '') || '0'
+                  ) > 0 && (
                     <div>
                       <Label>Border Color</Label>
                       <div className="flex gap-2 mt-1">
                         <Input
                           type="color"
-                          value={currentStyles.borderColor || "#e5e7eb"}
-                          onChange={(e) => updateStyle("borderColor", e.target.value)}
+                          value={currentStyles.borderColor || '#e5e7eb'}
+                          onChange={(e) =>
+                            updateStyle('borderColor', e.target.value)
+                          }
                           className="w-12 h-8 p-1 border rounded"
                         />
                         <Input
-                          value={currentStyles.borderColor || "#e5e7eb"}
-                          onChange={(e) => updateStyle("borderColor", e.target.value)}
+                          value={currentStyles.borderColor || '#e5e7eb'}
+                          onChange={(e) =>
+                            updateStyle('borderColor', e.target.value)
+                          }
                           placeholder="#e5e7eb"
                           className="flex-1"
                         />
@@ -945,7 +1197,9 @@ export function PropertiesPanel() {
               <Card className="p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Layout className="h-4 w-4" />
-                  <h3 className="text-sm font-medium text-foreground">Alignment & Position</h3>
+                  <h3 className="text-sm font-medium text-foreground">
+                    Alignment & Position
+                  </h3>
                 </div>
 
                 <div className="space-y-4">
@@ -955,10 +1209,10 @@ export function PropertiesPanel() {
                       {position ? (
                         <>
                           Component {position.index + 1} of {position.total}
-                          {position.parentId && " (in container)"}
+                          {position.parentId && ' (in container)'}
                         </>
                       ) : (
-                        "Position unknown"
+                        'Position unknown'
                       )}
                     </div>
                     <div className="flex gap-2 mt-1">
@@ -966,8 +1220,8 @@ export function PropertiesPanel() {
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          console.log("[v0] Move Up clicked")
-                          moveComponent("up")
+                          console.log('[v0] Move Up clicked')
+                          moveComponent('up')
                         }}
                         disabled={!position || position.index === 0}
                         className="flex-1"
@@ -979,10 +1233,12 @@ export function PropertiesPanel() {
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          console.log("[v0] Move Down clicked")
-                          moveComponent("down")
+                          console.log('[v0] Move Down clicked')
+                          moveComponent('down')
                         }}
-                        disabled={!position || position.index === position.total - 1}
+                        disabled={
+                          !position || position.index === position.total - 1
+                        }
                         className="flex-1"
                       >
                         <ArrowDown className="h-4 w-4 mr-1" />
@@ -994,15 +1250,17 @@ export function PropertiesPanel() {
                   <div>
                     <Label>Display</Label>
                     <Select
-                      value={currentStyles.display || "block"}
-                      onValueChange={(value) => updateStyle("display", value)}
+                      value={currentStyles.display || 'block'}
+                      onValueChange={(value) => updateStyle('display', value)}
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="block">Block</SelectItem>
-                        <SelectItem value="inline-block">Inline Block</SelectItem>
+                        <SelectItem value="inline-block">
+                          Inline Block
+                        </SelectItem>
                         <SelectItem value="flex">Flex</SelectItem>
                         <SelectItem value="inline-flex">Inline Flex</SelectItem>
                         <SelectItem value="none">Hidden</SelectItem>
@@ -1014,20 +1272,21 @@ export function PropertiesPanel() {
                     <Label>Horizontal Alignment</Label>
                     <div className="flex gap-1 mt-1">
                       {[
-                        { value: "left", label: "Left", icon: AlignLeft },
-                        { value: "center", label: "Center", icon: AlignCenter },
-                        { value: "right", label: "Right", icon: AlignRight },
+                        { value: 'left', label: 'Left', icon: AlignLeft },
+                        { value: 'center', label: 'Center', icon: AlignCenter },
+                        { value: 'right', label: 'Right', icon: AlignRight }
                       ].map(({ value, label, icon: Icon }) => (
                         <Button
                           key={value}
                           variant={
                             selectedComponent.content.alignment === value ||
-                            (value === "left" && !selectedComponent.content.alignment)
-                              ? "default"
-                              : "outline"
+                            (value === 'left' &&
+                              !selectedComponent.content.alignment)
+                              ? 'default'
+                              : 'outline'
                           }
                           size="sm"
-                          onClick={() => updateContent("alignment", value)}
+                          onClick={() => updateContent('alignment', value)}
                           className="flex-1 p-2"
                           title={label}
                         >
@@ -1037,13 +1296,15 @@ export function PropertiesPanel() {
                     </div>
                   </div>
 
-                  {currentStyles.display?.includes("flex") && (
+                  {currentStyles.display?.includes('flex') && (
                     <>
                       <div>
                         <Label>Justify Content</Label>
                         <Select
-                          value={currentStyles.justifyContent || "flex-start"}
-                          onValueChange={(value) => updateStyle("justifyContent", value)}
+                          value={currentStyles.justifyContent || 'flex-start'}
+                          onValueChange={(value) =>
+                            updateStyle('justifyContent', value)
+                          }
                         >
                           <SelectTrigger>
                             <SelectValue />
@@ -1052,9 +1313,15 @@ export function PropertiesPanel() {
                             <SelectItem value="flex-start">Start</SelectItem>
                             <SelectItem value="center">Center</SelectItem>
                             <SelectItem value="flex-end">End</SelectItem>
-                            <SelectItem value="space-between">Space Between</SelectItem>
-                            <SelectItem value="space-around">Space Around</SelectItem>
-                            <SelectItem value="space-evenly">Space Evenly</SelectItem>
+                            <SelectItem value="space-between">
+                              Space Between
+                            </SelectItem>
+                            <SelectItem value="space-around">
+                              Space Around
+                            </SelectItem>
+                            <SelectItem value="space-evenly">
+                              Space Evenly
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -1062,8 +1329,10 @@ export function PropertiesPanel() {
                       <div>
                         <Label>Align Items</Label>
                         <Select
-                          value={currentStyles.alignItems || "stretch"}
-                          onValueChange={(value) => updateStyle("alignItems", value)}
+                          value={currentStyles.alignItems || 'stretch'}
+                          onValueChange={(value) =>
+                            updateStyle('alignItems', value)
+                          }
                         >
                           <SelectTrigger>
                             <SelectValue />
@@ -1083,8 +1352,8 @@ export function PropertiesPanel() {
                   <div>
                     <Label>Position</Label>
                     <Select
-                      value={currentStyles.position || "static"}
-                      onValueChange={(value) => updateStyle("position", value)}
+                      value={currentStyles.position || 'static'}
+                      onValueChange={(value) => updateStyle('position', value)}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -1105,7 +1374,9 @@ export function PropertiesPanel() {
               <Card className="p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Spacing className="h-4 w-4" />
-                  <h3 className="text-sm font-medium text-foreground">Spacing</h3>
+                  <h3 className="text-sm font-medium text-foreground">
+                    Spacing
+                  </h3>
                 </div>
 
                 <div className="space-y-4">
@@ -1116,8 +1387,8 @@ export function PropertiesPanel() {
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          updateStyle("marginTop", "0px")
-                          updateStyle("marginBottom", "16px")
+                          updateStyle('marginTop', '0px')
+                          updateStyle('marginBottom', '16px')
                         }}
                         className="text-xs"
                       >
@@ -1127,8 +1398,8 @@ export function PropertiesPanel() {
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          updateStyle("marginTop", "32px")
-                          updateStyle("marginBottom", "32px")
+                          updateStyle('marginTop', '32px')
+                          updateStyle('marginBottom', '32px')
                         }}
                         className="text-xs"
                       >
@@ -1138,8 +1409,8 @@ export function PropertiesPanel() {
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          updateStyle("marginTop", "16px")
-                          updateStyle("marginBottom", "0px")
+                          updateStyle('marginTop', '16px')
+                          updateStyle('marginBottom', '0px')
                         }}
                         className="text-xs"
                       >
@@ -1149,8 +1420,8 @@ export function PropertiesPanel() {
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          updateStyle("marginTop", "64px")
-                          updateStyle("marginBottom", "16px")
+                          updateStyle('marginTop', '64px')
+                          updateStyle('marginBottom', '16px')
                         }}
                         className="text-xs"
                       >
@@ -1167,8 +1438,8 @@ export function PropertiesPanel() {
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          updateStyle("margin", "0")
-                          updateStyle("padding", "0")
+                          updateStyle('margin', '0')
+                          updateStyle('padding', '0')
                         }}
                         className="text-xs"
                       >
@@ -1178,8 +1449,8 @@ export function PropertiesPanel() {
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          updateStyle("margin", "8px")
-                          updateStyle("padding", "8px")
+                          updateStyle('margin', '8px')
+                          updateStyle('padding', '8px')
                         }}
                         className="text-xs"
                       >
@@ -1189,8 +1460,8 @@ export function PropertiesPanel() {
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          updateStyle("margin", "16px")
-                          updateStyle("padding", "16px")
+                          updateStyle('margin', '16px')
+                          updateStyle('padding', '16px')
                         }}
                         className="text-xs"
                       >
@@ -1205,8 +1476,10 @@ export function PropertiesPanel() {
                       <div>
                         <Label className="text-xs">Top</Label>
                         <Input
-                          value={currentStyles.marginTop || "0"}
-                          onChange={(e) => updateStyle("marginTop", e.target.value)}
+                          value={currentStyles.marginTop || '0'}
+                          onChange={(e) =>
+                            updateStyle('marginTop', e.target.value)
+                          }
                           placeholder="0px"
                           className="text-xs"
                         />
@@ -1214,8 +1487,10 @@ export function PropertiesPanel() {
                       <div>
                         <Label className="text-xs">Bottom</Label>
                         <Input
-                          value={currentStyles.marginBottom || "0"}
-                          onChange={(e) => updateStyle("marginBottom", e.target.value)}
+                          value={currentStyles.marginBottom || '0'}
+                          onChange={(e) =>
+                            updateStyle('marginBottom', e.target.value)
+                          }
                           placeholder="0px"
                           className="text-xs"
                         />
@@ -1223,8 +1498,10 @@ export function PropertiesPanel() {
                       <div>
                         <Label className="text-xs">Left</Label>
                         <Input
-                          value={currentStyles.marginLeft || "0"}
-                          onChange={(e) => updateStyle("marginLeft", e.target.value)}
+                          value={currentStyles.marginLeft || '0'}
+                          onChange={(e) =>
+                            updateStyle('marginLeft', e.target.value)
+                          }
                           placeholder="0px"
                           className="text-xs"
                         />
@@ -1232,8 +1509,10 @@ export function PropertiesPanel() {
                       <div>
                         <Label className="text-xs">Right</Label>
                         <Input
-                          value={currentStyles.marginRight || "0"}
-                          onChange={(e) => updateStyle("marginRight", e.target.value)}
+                          value={currentStyles.marginRight || '0'}
+                          onChange={(e) =>
+                            updateStyle('marginRight', e.target.value)
+                          }
                           placeholder="0px"
                           className="text-xs"
                         />
@@ -1247,8 +1526,10 @@ export function PropertiesPanel() {
                       <div>
                         <Label className="text-xs">Top</Label>
                         <Input
-                          value={currentStyles.paddingTop || "0"}
-                          onChange={(e) => updateStyle("paddingTop", e.target.value)}
+                          value={currentStyles.paddingTop || '0'}
+                          onChange={(e) =>
+                            updateStyle('paddingTop', e.target.value)
+                          }
                           placeholder="0px"
                           className="text-xs"
                         />
@@ -1256,8 +1537,10 @@ export function PropertiesPanel() {
                       <div>
                         <Label className="text-xs">Bottom</Label>
                         <Input
-                          value={currentStyles.paddingBottom || "0"}
-                          onChange={(e) => updateStyle("paddingBottom", e.target.value)}
+                          value={currentStyles.paddingBottom || '0'}
+                          onChange={(e) =>
+                            updateStyle('paddingBottom', e.target.value)
+                          }
                           placeholder="0px"
                           className="text-xs"
                         />
@@ -1265,8 +1548,10 @@ export function PropertiesPanel() {
                       <div>
                         <Label className="text-xs">Left</Label>
                         <Input
-                          value={currentStyles.paddingLeft || "0"}
-                          onChange={(e) => updateStyle("paddingLeft", e.target.value)}
+                          value={currentStyles.paddingLeft || '0'}
+                          onChange={(e) =>
+                            updateStyle('paddingLeft', e.target.value)
+                          }
                           placeholder="0px"
                           className="text-xs"
                         />
@@ -1274,8 +1559,10 @@ export function PropertiesPanel() {
                       <div>
                         <Label className="text-xs">Right</Label>
                         <Input
-                          value={currentStyles.paddingRight || "0"}
-                          onChange={(e) => updateStyle("paddingRight", e.target.value)}
+                          value={currentStyles.paddingRight || '0'}
+                          onChange={(e) =>
+                            updateStyle('paddingRight', e.target.value)
+                          }
                           placeholder="0px"
                           className="text-xs"
                         />
@@ -1287,14 +1574,16 @@ export function PropertiesPanel() {
 
               {/* Size Controls */}
               <Card className="p-4">
-                <h3 className="text-sm font-medium text-foreground mb-3">Size</h3>
+                <h3 className="text-sm font-medium text-foreground mb-3">
+                  Size
+                </h3>
 
                 <div className="space-y-4">
                   <div>
                     <Label>Width</Label>
                     <Select
-                      value={currentStyles.width || "auto"}
-                      onValueChange={(value) => updateStyle("width", value)}
+                      value={currentStyles.width || 'auto'}
+                      onValueChange={(value) => updateStyle('width', value)}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -1316,8 +1605,8 @@ export function PropertiesPanel() {
                   <div>
                     <Label>Height</Label>
                     <Select
-                      value={currentStyles.height || "auto"}
-                      onValueChange={(value) => updateStyle("height", value)}
+                      value={currentStyles.height || 'auto'}
+                      onValueChange={(value) => updateStyle('height', value)}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -1340,8 +1629,8 @@ export function PropertiesPanel() {
                   <div>
                     <Label>Min Width</Label>
                     <Input
-                      value={currentStyles.minWidth || ""}
-                      onChange={(e) => updateStyle("minWidth", e.target.value)}
+                      value={currentStyles.minWidth || ''}
+                      onChange={(e) => updateStyle('minWidth', e.target.value)}
                       placeholder="e.g., 100px, 20%"
                       className="text-xs"
                     />
@@ -1350,8 +1639,8 @@ export function PropertiesPanel() {
                   <div>
                     <Label>Max Width</Label>
                     <Input
-                      value={currentStyles.maxWidth || ""}
-                      onChange={(e) => updateStyle("maxWidth", e.target.value)}
+                      value={currentStyles.maxWidth || ''}
+                      onChange={(e) => updateStyle('maxWidth', e.target.value)}
                       placeholder="e.g., 500px, 100%"
                       className="text-xs"
                     />

@@ -1,60 +1,62 @@
-"use client";
+'use client'
 
-import React, { useState } from "react";
-import { cn } from "@/lib/utils";
-import { useBuilder } from "./builder-context";
-import { getComponentTemplate } from "./component-registry";
-import { generateId, generateTailwindClasses } from "./canvas-utils";
-import { AddComponentButton } from "./add-component-button";
-import { useFormState } from "./form-state-context";
-import { GripVertical, Smartphone, Tablet, Monitor } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { GripVertical, Monitor, Smartphone, Tablet } from 'lucide-react'
+import React, { useState } from 'react'
+
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+
+import { AddComponentButton } from './add-component-button'
+import { useBuilder } from './builder-context'
+import { generateId, generateTailwindClasses } from './canvas-utils'
+import { getComponentTemplate } from './component-registry'
+import { useFormState } from './form-state-context'
 
 interface CanvasProps {
-  isPreviewMode?: boolean;
+  isPreviewMode?: boolean
 }
 
-export type Breakpoint = "mobile" | "tablet" | "desktop";
+export type Breakpoint = 'mobile' | 'tablet' | 'desktop'
 
 export function Canvas({ isPreviewMode = false }: CanvasProps) {
-  const { state, dispatch } = useBuilder();
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-  const [isDragOver, setIsDragOver] = useState(false);
+  const { state, dispatch } = useBuilder()
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+  const [isDragOver, setIsDragOver] = useState(false)
   const [dragOverContainer, setDragOverContainer] = useState<{
-    id: string;
-    type: string;
-    name?: string;
-  } | null>(null);
+    id: string
+    type: string
+    name?: string
+  } | null>(null)
   const [mobileMenuStates, setMobileMenuStates] = useState<
     Record<string, boolean>
-  >({});
+  >({})
 
   const currentPage = state.pages.find(
     (page) => page.id === state.currentPageId
-  );
-  const currentComponents = currentPage?.components || [];
+  )
+  const currentComponents = currentPage?.components || []
 
   const toggleMobileMenu = (componentId: string) => {
     setMobileMenuStates((prev) => ({
       ...prev,
-      [componentId]: !prev[componentId],
-    }));
-  };
+      [componentId]: !prev[componentId]
+    }))
+  }
 
   const handleDrop = React.useCallback(
     (e: React.DragEvent, insertIndex?: number) => {
-      e.preventDefault();
-      setIsDragOver(false);
-      setDragOverIndex(null);
-      setDragOverContainer(null);
+      e.preventDefault()
+      setIsDragOver(false)
+      setDragOverIndex(null)
+      setDragOverContainer(null)
 
       try {
-        const data = JSON.parse(e.dataTransfer.getData("application/json"));
-        const template = getComponentTemplate(data.type);
+        const data = JSON.parse(e.dataTransfer.getData('application/json'))
+        const template = getComponentTemplate(data.type)
 
         if (!template) {
-          console.warn(`No template found for component type: ${data.type}`);
-          return;
+          console.warn(`No template found for component type: ${data.type}`)
+          return
         }
 
         const newComponent = {
@@ -64,84 +66,84 @@ export function Canvas({ isPreviewMode = false }: CanvasProps) {
           styles: {
             desktop: { ...template.defaultStyles.desktop },
             tablet: { ...template.defaultStyles.tablet },
-            mobile: { ...template.defaultStyles.mobile },
-          },
-        };
+            mobile: { ...template.defaultStyles.mobile }
+          }
+        }
 
         dispatch({
-          type: "ADD_COMPONENT",
+          type: 'ADD_COMPONENT',
           payload: {
             component: newComponent,
-            insertIndex: insertIndex,
-          },
-        });
+            insertIndex: insertIndex
+          }
+        })
       } catch (error) {
-        console.error("Error parsing drop data:", error);
+        console.error('Error parsing drop data:', error)
       }
     },
     [dispatch]
-  );
+  )
 
   const handleDragOver = React.useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(true);
-  }, []);
+    e.preventDefault()
+    setIsDragOver(true)
+  }, [])
 
   const handleDragLeave = React.useCallback((e: React.DragEvent) => {
     // Only set drag over to false if we're leaving the canvas entirely
     if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-      setIsDragOver(false);
-      setDragOverIndex(null);
-      setDragOverContainer(null);
+      setIsDragOver(false)
+      setDragOverIndex(null)
+      setDragOverContainer(null)
     }
-  }, []);
+  }, [])
 
   const handleComponentDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault();
-    e.stopPropagation();
+    e.preventDefault()
+    e.stopPropagation()
 
-    const rect = e.currentTarget.getBoundingClientRect();
-    const midpoint = rect.top + rect.height / 2;
-    const insertIndex = e.clientY < midpoint ? index : index + 1;
+    const rect = e.currentTarget.getBoundingClientRect()
+    const midpoint = rect.top + rect.height / 2
+    const insertIndex = e.clientY < midpoint ? index : index + 1
 
-    setDragOverIndex(insertIndex);
-  };
+    setDragOverIndex(insertIndex)
+  }
 
   const handleCanvasClick = () => {
-    dispatch({ type: "SELECT_COMPONENT", payload: { id: null } });
-  };
+    dispatch({ type: 'SELECT_COMPONENT', payload: { id: null } })
+  }
 
   const handleDuplicate = (component: any) => {
-    dispatch({ type: "DUPLICATE_COMPONENT", payload: { id: component.id } });
-  };
+    dispatch({ type: 'DUPLICATE_COMPONENT', payload: { id: component.id } })
+  }
 
   const handleDelete = (id: string) => {
-    dispatch({ type: "DELETE_COMPONENT", payload: { id: id } });
-  };
+    dispatch({ type: 'DELETE_COMPONENT', payload: { id: id } })
+  }
 
   const getCanvasBackgroundStyles = () => {
-    const { canvasBackground } = state;
-    const styles: React.CSSProperties = {};
+    const { canvasBackground } = state
+    const styles: React.CSSProperties = {}
 
-    if (canvasBackground.type === "color") {
-      styles.backgroundColor = canvasBackground.color;
-    } else if (canvasBackground.type === "image" && canvasBackground.image) {
-      styles.backgroundImage = `url(${canvasBackground.image})`;
-      styles.backgroundSize = canvasBackground.imageSize;
-      styles.backgroundPosition = canvasBackground.imagePosition;
+    if (canvasBackground.type === 'color') {
+      styles.backgroundColor = canvasBackground.color
+    } else if (canvasBackground.type === 'image' && canvasBackground.image) {
+      styles.backgroundImage = `url(${canvasBackground.image})`
+      styles.backgroundSize = canvasBackground.imageSize
+      styles.backgroundPosition = canvasBackground.imagePosition
       styles.backgroundRepeat =
-        canvasBackground.imageSize === "repeat" ? "repeat" : "no-repeat";
+        canvasBackground.imageSize === 'repeat' ? 'repeat' : 'no-repeat'
     }
 
-    return styles;
-  };
+    return styles
+  }
 
   return (
     <div
-      className={cn("flex-1 p-4 overflow-auto transition-all duration-200")}
+      className={cn('flex-1 p-4 overflow-auto transition-all duration-200')}
       style={{
-        minHeight: isPreviewMode ? "100vh" : "calc(100vh - 200px)",
-        ...getCanvasBackgroundStyles(),
+        minHeight: isPreviewMode ? '100vh' : 'calc(100vh - 200px)',
+        ...getCanvasBackgroundStyles()
       }}
       onDrop={isPreviewMode ? undefined : handleDrop}
       onDragOver={isPreviewMode ? undefined : handleDragOver}
@@ -151,26 +153,26 @@ export function Canvas({ isPreviewMode = false }: CanvasProps) {
       {!isPreviewMode && (
         <div className="flex justify-center mb-4">
           <div className="flex items-center gap-2 bg-background border rounded-lg p-1">
-            {["mobile", "tablet", "desktop"].map((breakpoint) => (
+            {['mobile', 'tablet', 'desktop'].map((breakpoint) => (
               <Button
                 key={breakpoint}
                 variant={
-                  state.currentBreakpoint === breakpoint ? "default" : "ghost"
+                  state.currentBreakpoint === breakpoint ? 'default' : 'ghost'
                 }
                 size="sm"
                 onClick={() =>
                   dispatch({
-                    type: "SET_BREAKPOINT",
-                    payload: { breakpoint: breakpoint as Breakpoint },
+                    type: 'SET_BREAKPOINT',
+                    payload: { breakpoint: breakpoint as Breakpoint }
                   })
                 }
                 className="capitalize"
               >
-                {breakpoint === "mobile" && (
+                {breakpoint === 'mobile' && (
                   <Smartphone className="h-4 w-4 mr-1" />
                 )}
-                {breakpoint === "tablet" && <Tablet className="h-4 w-4 mr-1" />}
-                {breakpoint === "desktop" && (
+                {breakpoint === 'tablet' && <Tablet className="h-4 w-4 mr-1" />}
+                {breakpoint === 'desktop' && (
                   <Monitor className="h-4 w-4 mr-1" />
                 )}
                 {breakpoint}
@@ -183,21 +185,21 @@ export function Canvas({ isPreviewMode = false }: CanvasProps) {
       {/* Canvas Content */}
       <div
         className={cn(
-          "mx-auto bg-background border rounded-lg shadow-sm transition-all duration-200",
-          state.currentBreakpoint === "mobile" && "w-full max-w-sm",
-          state.currentBreakpoint === "tablet" && "w-full max-w-2xl",
-          state.currentBreakpoint === "desktop" && "w-full max-w-6xl",
-          isPreviewMode && "max-w-none w-full border-0 shadow-none rounded-none"
+          'mx-auto bg-background border rounded-lg shadow-sm transition-all duration-200',
+          state.currentBreakpoint === 'mobile' && 'w-full max-w-sm',
+          state.currentBreakpoint === 'tablet' && 'w-full max-w-2xl',
+          state.currentBreakpoint === 'desktop' && 'w-full max-w-6xl',
+          isPreviewMode && 'max-w-none w-full border-0 shadow-none rounded-none'
         )}
         style={{
-          minHeight: isPreviewMode ? "100vh" : "600px",
+          minHeight: isPreviewMode ? '100vh' : '600px',
           width: isPreviewMode
-            ? "100%"
-            : state.currentBreakpoint === "mobile"
-            ? "384px"
-            : state.currentBreakpoint === "tablet"
-            ? "672px"
-            : "1152px",
+            ? '100%'
+            : state.currentBreakpoint === 'mobile'
+              ? '384px'
+              : state.currentBreakpoint === 'tablet'
+                ? '672px'
+                : '1152px'
         }}
       >
         {!isPreviewMode && isDragOver && !dragOverContainer && (
@@ -235,11 +237,11 @@ export function Canvas({ isPreviewMode = false }: CanvasProps) {
                     isPreviewMode
                       ? () => {}
                       : (e) => {
-                          e?.stopPropagation();
+                          e?.stopPropagation()
                           dispatch({
-                            type: "SELECT_COMPONENT",
-                            payload: { id: component.id },
-                          });
+                            type: 'SELECT_COMPONENT',
+                            payload: { id: component.id }
+                          })
                         }
                   }
                   onDragOver={
@@ -271,26 +273,26 @@ export function Canvas({ isPreviewMode = false }: CanvasProps) {
         )}
       </div>
     </div>
-  );
+  )
 }
 
 interface CanvasComponentProps {
-  component: any;
-  isSelected: boolean;
-  onClick: (e?: React.MouseEvent) => void;
-  onDragOver: (e: React.DragEvent) => void;
-  onDuplicate: () => void;
-  onDelete: () => void;
-  currentBreakpoint: string;
-  dispatch: any;
-  state: any;
-  isPreviewMode?: boolean;
-  dragOverContainer: { id: string; type: string; name?: string } | null;
+  component: any
+  isSelected: boolean
+  onClick: (e?: React.MouseEvent) => void
+  onDragOver: (e: React.DragEvent) => void
+  onDuplicate: () => void
+  onDelete: () => void
+  currentBreakpoint: string
+  dispatch: any
+  state: any
+  isPreviewMode?: boolean
+  dragOverContainer: { id: string; type: string; name?: string } | null
   setDragOverContainer: (
     container: { id: string; type: string; name?: string } | null
-  ) => void;
-  mobileMenuStates: Record<string, boolean>;
-  toggleMobileMenu: (componentId: string) => void;
+  ) => void
+  mobileMenuStates: Record<string, boolean>
+  toggleMobileMenu: (componentId: string) => void
 }
 
 function CanvasComponent({
@@ -307,92 +309,92 @@ function CanvasComponent({
   dragOverContainer,
   setDragOverContainer,
   mobileMenuStates,
-  toggleMobileMenu,
+  toggleMobileMenu
 }: CanvasComponentProps) {
-  const { updateFormField, getFormState } = useFormState();
-  const [isHovered, setIsHovered] = useState(false);
+  const { updateFormField, getFormState } = useFormState()
+  const [isHovered, setIsHovered] = useState(false)
   const [previousFieldNames, setPreviousFieldNames] = useState<
     Map<string, string>
-  >(new Map());
+  >(new Map())
 
   const getResponsiveClasses = (component: any) => {
-    let classes = "";
+    let classes = ''
 
     // Apply mobile styles (base)
     if (component.styles.mobile) {
-      classes += generateTailwindClasses(component.styles.mobile);
+      classes += generateTailwindClasses(component.styles.mobile)
     }
 
     // Apply tablet styles with md: prefix
     if (component.styles.tablet) {
       const tabletClasses = generateTailwindClasses(
         component.styles.tablet,
-        "md:"
-      );
-      classes += ` ${tabletClasses}`;
+        'md:'
+      )
+      classes += ` ${tabletClasses}`
     }
 
     // Apply desktop styles with lg: prefix
     if (component.styles.desktop) {
       const desktopClasses = generateTailwindClasses(
         component.styles.desktop,
-        "lg:"
-      );
-      classes += ` ${desktopClasses}`;
+        'lg:'
+      )
+      classes += ` ${desktopClasses}`
     }
 
-    return classes.trim();
-  };
+    return classes.trim()
+  }
 
   const getInlineStyles = (component: any) => {
-    const styles: React.CSSProperties = {};
+    const styles: React.CSSProperties = {}
 
     if (!component || !component.styles) {
-      return styles;
+      return styles
     }
 
     // Get styles for current breakpoint with inheritance
-    const currentStyles = component.styles[currentBreakpoint] || {};
-    const tabletStyles = component.styles.tablet || {};
-    const desktopStyles = component.styles.desktop || {};
+    const currentStyles = component.styles[currentBreakpoint] || {}
+    const tabletStyles = component.styles.tablet || {}
+    const desktopStyles = component.styles.desktop || {}
 
     // Apply styles with inheritance (mobile inherits from tablet, tablet from desktop)
-    let finalStyles = { ...desktopStyles };
-    if (currentBreakpoint === "tablet" || currentBreakpoint === "mobile") {
-      finalStyles = { ...finalStyles, ...tabletStyles };
+    let finalStyles = { ...desktopStyles }
+    if (currentBreakpoint === 'tablet' || currentBreakpoint === 'mobile') {
+      finalStyles = { ...finalStyles, ...tabletStyles }
     }
-    if (currentBreakpoint === "mobile") {
-      finalStyles = { ...finalStyles, ...currentStyles };
-    } else if (currentBreakpoint === "tablet") {
-      finalStyles = { ...finalStyles, ...currentStyles };
+    if (currentBreakpoint === 'mobile') {
+      finalStyles = { ...finalStyles, ...currentStyles }
+    } else if (currentBreakpoint === 'tablet') {
+      finalStyles = { ...finalStyles, ...currentStyles }
     } else {
-      finalStyles = { ...finalStyles, ...currentStyles };
+      finalStyles = { ...finalStyles, ...currentStyles }
     }
 
     // Apply color properties
     if (finalStyles.color) {
-      styles.color = finalStyles.color;
+      styles.color = finalStyles.color
     }
     if (finalStyles.backgroundColor) {
-      styles.backgroundColor = finalStyles.backgroundColor;
+      styles.backgroundColor = finalStyles.backgroundColor
     }
 
     if (finalStyles.border) {
-      styles.border = finalStyles.border;
+      styles.border = finalStyles.border
     }
 
     // Apply individual border properties (these will override the general border property)
     if (finalStyles.borderColor) {
-      styles.borderColor = finalStyles.borderColor;
+      styles.borderColor = finalStyles.borderColor
     }
     if (finalStyles.borderWidth) {
-      styles.borderWidth = finalStyles.borderWidth;
+      styles.borderWidth = finalStyles.borderWidth
     }
     if (finalStyles.borderStyle) {
-      styles.borderStyle = finalStyles.borderStyle;
+      styles.borderStyle = finalStyles.borderStyle
     }
     if (finalStyles.borderRadius) {
-      styles.borderRadius = finalStyles.borderRadius;
+      styles.borderRadius = finalStyles.borderRadius
     }
 
     if (
@@ -400,68 +402,68 @@ function CanvasComponent({
       !finalStyles.borderStyle &&
       !finalStyles.border
     ) {
-      styles.borderStyle = "solid";
+      styles.borderStyle = 'solid'
     }
 
     // Apply effect properties
     if (finalStyles.boxShadow) {
-      styles.boxShadow = finalStyles.boxShadow;
+      styles.boxShadow = finalStyles.boxShadow
     }
     if (finalStyles.opacity) {
-      styles.opacity = finalStyles.opacity;
+      styles.opacity = finalStyles.opacity
     }
     if (finalStyles.transform) {
-      styles.transform = finalStyles.transform;
+      styles.transform = finalStyles.transform
     }
     if (finalStyles.filter) {
-      styles.filter = finalStyles.filter;
+      styles.filter = finalStyles.filter
     }
 
     // Apply sizing properties that might not be handled by Tailwind
     if (
       finalStyles.width &&
-      !finalStyles.width.includes("px") &&
-      !finalStyles.width.includes("%")
+      !finalStyles.width.includes('px') &&
+      !finalStyles.width.includes('%')
     ) {
-      styles.width = finalStyles.width;
+      styles.width = finalStyles.width
     }
     if (
       finalStyles.height &&
-      !finalStyles.height.includes("px") &&
-      !finalStyles.height.includes("%")
+      !finalStyles.height.includes('px') &&
+      !finalStyles.height.includes('%')
     ) {
-      styles.height = finalStyles.height;
+      styles.height = finalStyles.height
     }
     if (finalStyles.minWidth) {
-      styles.minWidth = finalStyles.minWidth;
+      styles.minWidth = finalStyles.minWidth
     }
     if (finalStyles.minHeight) {
-      styles.minHeight = finalStyles.minHeight;
+      styles.minHeight = finalStyles.minHeight
     }
     if (finalStyles.maxWidth) {
-      styles.maxWidth = finalStyles.maxWidth;
+      styles.maxWidth = finalStyles.maxWidth
     }
     if (finalStyles.maxHeight) {
-      styles.maxHeight = finalStyles.maxHeight;
+      styles.maxHeight = finalStyles.maxHeight
     }
 
-    return styles;
-  };
+    return styles
+  }
 
   const renderComponent = () => {
     const getAlignment = (alignment: string) => {
       switch (alignment) {
-        case "center":
-          return "flex justify-center";
-        case "right":
-          return "flex justify-end";
-        case "left":
+        case 'center':
+          return 'flex justify-center'
+        case 'right':
+          return 'flex justify-end'
+        case 'left':
         default:
-          return "flex justify-start";
+          return 'flex justify-start'
       }
-    };
-    const responsiveClasses = getResponsiveClasses(component);
-    const inlineStyles = getInlineStyles(component);
+    }
+    const responsiveClasses = getResponsiveClasses(component)
+    const inlineStyles = getInlineStyles(component)
 
     const findParentForm = (
       components: any[],
@@ -469,19 +471,19 @@ function CanvasComponent({
     ): any | null => {
       for (const comp of components) {
         if (
-          comp.type === "form" &&
+          comp.type === 'form' &&
           comp.children &&
           comp.children.some((child: any) => child.id === componentId)
         ) {
-          return comp;
+          return comp
         }
         if (comp.children) {
-          const found = findParentForm(comp.children, componentId);
-          if (found) return found;
+          const found = findParentForm(comp.children, componentId)
+          if (found) return found
         }
       }
-      return null;
-    };
+      return null
+    }
 
     const renameFormField = (
       formId: string,
@@ -489,116 +491,116 @@ function CanvasComponent({
       newName: string
     ) => {
       dispatch({
-        type: "RENAME_FORM_FIELD",
+        type: 'RENAME_FORM_FIELD',
         payload: {
           formId: formId,
           oldName: oldName,
-          newName: newName,
-        },
-      });
-    };
+          newName: newName
+        }
+      })
+    }
 
     const getSectionResponsiveClasses = (component: any) => {
-      let classes = "py-12 md:py-24 lg:py-32";
+      let classes = 'py-12 md:py-24 lg:py-32'
 
-      if (component.content.padding === "none") {
-        classes = "py-0";
-      } else if (component.content.padding === "small") {
-        classes = "py-6 md:py-12 lg:py-16";
+      if (component.content.padding === 'none') {
+        classes = 'py-0'
+      } else if (component.content.padding === 'small') {
+        classes = 'py-6 md:py-12 lg:py-16'
       }
 
-      return classes;
-    };
+      return classes
+    }
 
     const getGridResponsiveClasses = (component: any) => {
-      let classes = "grid gap-6";
+      let classes = 'grid gap-6'
 
       switch (component.content.columns) {
-        case "2":
-          classes += " md:grid-cols-2";
-          break;
-        case "3":
-          classes += " md:grid-cols-3";
-          break;
-        case "4":
-          classes += " md:grid-cols-2 lg:grid-cols-4";
-          break;
+        case '2':
+          classes += ' md:grid-cols-2'
+          break
+        case '3':
+          classes += ' md:grid-cols-3'
+          break
+        case '4':
+          classes += ' md:grid-cols-2 lg:grid-cols-4'
+          break
         default:
-          classes += " md:grid-cols-1";
-          break;
+          classes += ' md:grid-cols-1'
+          break
       }
 
-      return classes;
-    };
+      return classes
+    }
 
     const getHeadingResponsiveSize = (level: string) => {
       switch (level) {
-        case "h1":
-          return "text-4xl md:text-5xl lg:text-6xl";
-        case "h2":
-          return "text-3xl md:text-4xl lg:text-5xl";
-        case "h3":
-          return "text-2xl md:text-3xl lg:text-4xl";
-        case "h4":
-          return "text-xl md:text-2xl lg:text-3xl";
-        case "h5":
-          return "text-lg md:text-xl lg:text-2xl";
-        case "h6":
-          return "text-base md:text-lg lg:text-xl";
+        case 'h1':
+          return 'text-4xl md:text-5xl lg:text-6xl'
+        case 'h2':
+          return 'text-3xl md:text-4xl lg:text-5xl'
+        case 'h3':
+          return 'text-2xl md:text-3xl lg:text-4xl'
+        case 'h4':
+          return 'text-xl md:text-2xl lg:text-3xl'
+        case 'h5':
+          return 'text-lg md:text-xl lg:text-2xl'
+        case 'h6':
+          return 'text-base md:text-lg lg:text-xl'
         default:
-          return "text-3xl md:text-4xl lg:text-5xl";
+          return 'text-3xl md:text-4xl lg:text-5xl'
       }
-    };
+    }
 
     const getButtonVariant = (variant: string) => {
       switch (variant) {
-        case "secondary":
-          return "bg-secondary text-secondary-foreground hover:bg-secondary/80";
-        case "destructive":
-          return "bg-destructive text-destructive-foreground hover:bg-destructive/80";
-        case "outline":
-          return "bg-transparent border border-input hover:bg-accent hover:text-accent-foreground";
-        case "ghost":
-          return "bg-transparent hover:bg-accent hover:text-accent-foreground";
-        case "link":
-          return "bg-transparent underline-offset-4 hover:underline text-foreground";
-        case "primary":
+        case 'secondary':
+          return 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+        case 'destructive':
+          return 'bg-destructive text-destructive-foreground hover:bg-destructive/80'
+        case 'outline':
+          return 'bg-transparent border border-input hover:bg-accent hover:text-accent-foreground'
+        case 'ghost':
+          return 'bg-transparent hover:bg-accent hover:text-accent-foreground'
+        case 'link':
+          return 'bg-transparent underline-offset-4 hover:underline text-foreground'
+        case 'primary':
         default:
-          return "bg-primary text-primary-foreground hover:bg-primary/90";
+          return 'bg-primary text-primary-foreground hover:bg-primary/90'
       }
-    };
+    }
 
     const getButtonResponsiveSize = (size: string) => {
       switch (size) {
-        case "lg":
-          return "px-8 py-3 text-lg";
-        case "sm":
-          return "px-3 py-1 text-sm";
-        case "default":
+        case 'lg':
+          return 'px-8 py-3 text-lg'
+        case 'sm':
+          return 'px-3 py-1 text-sm'
+        case 'default':
         default:
-          return "px-4 py-2";
+          return 'px-4 py-2'
       }
-    };
+    }
 
     switch (component.type) {
-      case "navbar":
+      case 'navbar':
         const menuItems = Array.isArray(component.content.menuItems)
           ? component.content.menuItems
-          : [];
-        const isMobile = state.currentBreakpoint === "mobile";
-        const isMobileMenuOpen = mobileMenuStates[component.id] || false;
+          : []
+        const isMobile = state.currentBreakpoint === 'mobile'
+        const isMobileMenuOpen = mobileMenuStates[component.id] || false
 
         const navbarContent = (
           <nav
             className={`w-full ${
-              component.content.sticky ? "sticky top-0" : "relative"
+              component.content.sticky ? 'sticky top-0' : 'relative'
             } z-50 ${responsiveClasses}`}
             style={{
               ...inlineStyles,
-              backgroundColor: component.content.backgroundColor || "#ffffff",
+              backgroundColor: component.content.backgroundColor || '#ffffff',
               boxShadow: component.content.shadow
-                ? "0 1px 3px rgba(0, 0, 0, 0.1)"
-                : "none",
+                ? '0 1px 3px rgba(0, 0, 0, 0.1)'
+                : 'none'
             }}
           >
             <div className="w-[90%] mx-auto">
@@ -607,13 +609,13 @@ function CanvasComponent({
                   {/* Logo */}
                   <div className="flex-shrink-0">
                     <a
-                      href={component.content.logoHref || "/"}
+                      href={component.content.logoHref || '/'}
                       className="text-xl font-bold"
                       style={{
-                        color: component.content.logoColor || "#1f2937",
+                        color: component.content.logoColor || '#1f2937'
                       }}
                     >
-                      {component.content.logo || "LOGO"}
+                      {component.content.logo || 'LOGO'}
                     </a>
                   </div>
 
@@ -622,11 +624,11 @@ function CanvasComponent({
                       <div className="ml-10 flex items-baseline space-x-4">
                         {menuItems.map((item: any, index: number) => {
                           const itemText =
-                            typeof item === "object"
-                              ? item.text || item.href || "Menu Item"
-                              : item;
+                            typeof item === 'object'
+                              ? item.text || item.href || 'Menu Item'
+                              : item
                           const itemHref =
-                            typeof item === "object" ? item.href || "#" : "#";
+                            typeof item === 'object' ? item.href || '#' : '#'
 
                           return (
                             <a
@@ -634,12 +636,12 @@ function CanvasComponent({
                               href={itemHref}
                               className="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-100 transition-colors"
                               style={{
-                                color: component.content.textColor || "#374151",
+                                color: component.content.textColor || '#374151'
                               }}
                             >
                               {itemText}
                             </a>
-                          );
+                          )
                         })}
                       </div>
                     </div>
@@ -650,14 +652,14 @@ function CanvasComponent({
                       <button
                         onClick={() => {
                           console.log(
-                            "[v0] Mobile menu toggled:",
+                            '[v0] Mobile menu toggled:',
                             !isMobileMenuOpen
-                          );
-                          toggleMobileMenu(component.id);
+                          )
+                          toggleMobileMenu(component.id)
                         }}
                         className="inline-flex items-center justify-center p-2 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
                         style={{
-                          color: component.content.textColor || "#374151",
+                          color: component.content.textColor || '#374151'
                         }}
                       >
                         <span className="sr-only">Open main menu</span>
@@ -704,11 +706,11 @@ function CanvasComponent({
                 <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-gray-200">
                   {menuItems.map((item: any, index: number) => {
                     const itemText =
-                      typeof item === "object"
-                        ? item.text || item.href || "Menu Item"
-                        : item;
+                      typeof item === 'object'
+                        ? item.text || item.href || 'Menu Item'
+                        : item
                     const itemHref =
-                      typeof item === "object" ? item.href || "#" : "#";
+                      typeof item === 'object' ? item.href || '#' : '#'
 
                     return (
                       <a
@@ -716,57 +718,57 @@ function CanvasComponent({
                         href={itemHref}
                         className="block px-3 py-2 rounded-md text-base font-medium hover:bg-gray-100 transition-colors"
                         style={{
-                          color: component.content.textColor || "#374151",
+                          color: component.content.textColor || '#374151'
                         }}
                         onClick={() => {
                           console.log(
-                            "[v0] Mobile menu item clicked:",
+                            '[v0] Mobile menu item clicked:',
                             itemText
-                          );
-                          toggleMobileMenu(component.id);
+                          )
+                          toggleMobileMenu(component.id)
                         }}
                       >
                         {itemText}
                       </a>
-                    );
+                    )
                   })}
                 </div>
               </div>
             )}
           </nav>
-        );
+        )
 
-        return navbarContent;
+        return navbarContent
 
-      case "form":
-        const formState = getFormState(component.id);
+      case 'form':
+        const formState = getFormState(component.id)
         const handleFormSubmit = (e: React.FormEvent) => {
-          e.preventDefault();
+          e.preventDefault()
           if (component.content.endpoint && component.content.method) {
-            const formData = formState || {};
-            console.log("[v0] Form submitted:", formData);
+            const formData = formState || {}
+            console.log('[v0] Form submitted:', formData)
 
             fetch(component.content.endpoint, {
               method: component.content.method,
               headers: {
-                "Content-Type": "application/json",
+                'Content-Type': 'application/json'
               },
-              body: JSON.stringify(formData),
+              body: JSON.stringify(formData)
             })
               .then((response) => response.json())
-              .then((data) => console.log("[v0] Form response:", data))
-              .catch((error) => console.error("[v0] Form error:", error));
+              .then((data) => console.log('[v0] Form response:', data))
+              .catch((error) => console.error('[v0] Form error:', error))
           }
-        };
+        }
 
         return (
           <div
             key={component.id}
             className={cn(
-              "relative group",
-              isSelected && "ring-2 ring-accent ring-offset-2",
+              'relative group',
+              isSelected && 'ring-2 ring-accent ring-offset-2',
               dragOverContainer?.id === component.id &&
-                "ring-2 ring-blue-500 bg-blue-50/50",
+                'ring-2 ring-blue-500 bg-blue-50/50',
               getInlineStyles(component.styles, currentBreakpoint)
             )}
             onClick={onClick}
@@ -774,8 +776,8 @@ function CanvasComponent({
             {dragOverContainer?.id === component.id && (
               <div className="absolute inset-0 bg-blue-500/10 border-2 border-dashed border-blue-500 rounded-lg flex items-center justify-center z-20">
                 <div className="bg-blue-500 text-white px-3 py-1 rounded-md text-sm font-medium">
-                  Drop component as nested component of{" "}
-                  {component.content.title || "Form"}
+                  Drop component as nested component of{' '}
+                  {component.content.title || 'Form'}
                 </div>
               </div>
             )}
@@ -783,20 +785,20 @@ function CanvasComponent({
               className="space-y-4 p-6 border rounded-lg bg-background"
               onSubmit={handleFormSubmit}
               onDrop={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setDragOverContainer(null);
+                e.preventDefault()
+                e.stopPropagation()
+                setDragOverContainer(null)
                 try {
                   const data = JSON.parse(
-                    e.dataTransfer.getData("application/json")
-                  );
-                  const template = getComponentTemplate(data.type);
+                    e.dataTransfer.getData('application/json')
+                  )
+                  const template = getComponentTemplate(data.type)
 
                   if (!template) {
                     console.warn(
                       `No template found for component type: ${data.type}`
-                    );
-                    return;
+                    )
+                    return
                   }
 
                   const newComponent = {
@@ -806,33 +808,33 @@ function CanvasComponent({
                     styles: {
                       desktop: { ...template.defaultStyles.desktop },
                       tablet: { ...template.defaultStyles.tablet },
-                      mobile: { ...template.defaultStyles.mobile },
-                    },
-                  };
+                      mobile: { ...template.defaultStyles.mobile }
+                    }
+                  }
 
                   dispatch({
-                    type: "ADD_TO_CONTAINER",
+                    type: 'ADD_TO_CONTAINER',
                     payload: {
                       containerId: component.id,
-                      component: newComponent,
-                    },
-                  });
+                      component: newComponent
+                    }
+                  })
                 } catch (error) {
-                  console.error("Error parsing drop data for form:", error);
+                  console.error('Error parsing drop data for form:', error)
                 }
               }}
               onDragOver={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
+                e.preventDefault()
+                e.stopPropagation()
                 setDragOverContainer({
                   id: component.id,
-                  type: "Form",
-                  name: component.content.title,
-                });
+                  type: 'Form',
+                  name: component.content.title
+                })
               }}
               onDragLeave={(e) => {
                 if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                  setDragOverContainer(null);
+                  setDragOverContainer(null)
                 }
               }}
             >
@@ -850,22 +852,22 @@ function CanvasComponent({
                     component={childComponent}
                     isSelected={state.selectedComponentId === childComponent.id}
                     onClick={(e) => {
-                      e?.stopPropagation();
+                      e?.stopPropagation()
                       dispatch({
-                        type: "SELECT_COMPONENT",
-                        payload: { id: childComponent.id },
-                      });
+                        type: 'SELECT_COMPONENT',
+                        payload: { id: childComponent.id }
+                      })
                     }}
                     onDuplicate={() =>
                       dispatch({
-                        type: "DUPLICATE_COMPONENT",
-                        payload: { id: childComponent.id },
+                        type: 'DUPLICATE_COMPONENT',
+                        payload: { id: childComponent.id }
                       })
                     }
                     onDelete={() =>
                       dispatch({
-                        type: "DELETE_COMPONENT",
-                        payload: { id: childComponent.id },
+                        type: 'DELETE_COMPONENT',
+                        payload: { id: childComponent.id }
                       })
                     }
                     currentBreakpoint={currentBreakpoint}
@@ -887,7 +889,7 @@ function CanvasComponent({
                     type="submit"
                     className="w-full bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md font-medium transition-colors"
                   >
-                    {component.content.submitButtonText || "Submit"}
+                    {component.content.submitButtonText || 'Submit'}
                   </button>
                 )}
 
@@ -911,20 +913,20 @@ function CanvasComponent({
               )}
             </form>
           </div>
-        );
+        )
 
-      case "input":
-        const currentInputName = component.content.name || "unnamed";
-        const previousInputName = previousFieldNames.get(component.id);
+      case 'input':
+        const currentInputName = component.content.name || 'unnamed'
+        const previousInputName = previousFieldNames.get(component.id)
 
         if (previousInputName && previousInputName !== currentInputName) {
-          const formComponent = findParentForm(state.components, component.id);
+          const formComponent = findParentForm(state.components, component.id)
           if (formComponent) {
             renameFormField(
               formComponent.id,
               previousInputName,
               currentInputName
-            );
+            )
           }
         }
 
@@ -932,7 +934,7 @@ function CanvasComponent({
         if (previousInputName !== currentInputName) {
           setPreviousFieldNames((prev) =>
             new Map(prev).set(component.id, currentInputName)
-          );
+          )
         }
 
         return (
@@ -954,7 +956,7 @@ function CanvasComponent({
             <input
               id={component.content.name}
               name={component.content.name}
-              type={component.content.type || "text"}
+              type={component.content.type || 'text'}
               placeholder={component.content.placeholder}
               defaultValue={component.content.value}
               required={component.content.required}
@@ -962,35 +964,35 @@ function CanvasComponent({
                 const formComponent = findParentForm(
                   state.components,
                   component.id
-                );
+                )
                 if (formComponent) {
                   updateFormField(
                     formComponent.id,
-                    component.content.name || "unnamed",
+                    component.content.name || 'unnamed',
                     e.target.value
-                  );
+                  )
                 }
               }}
               className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
             />
           </div>
-        );
+        )
 
-      case "textarea":
-        const currentTextareaName = component.content.name || "unnamed";
-        const previousTextareaName = previousFieldNames.get(component.id);
+      case 'textarea':
+        const currentTextareaName = component.content.name || 'unnamed'
+        const previousTextareaName = previousFieldNames.get(component.id)
 
         if (
           previousTextareaName &&
           previousTextareaName !== currentTextareaName
         ) {
-          const formComponent = findParentForm(state.components, component.id);
+          const formComponent = findParentForm(state.components, component.id)
           if (formComponent) {
             renameFormField(
               formComponent.id,
               previousTextareaName,
               currentTextareaName
-            );
+            )
           }
         }
 
@@ -998,7 +1000,7 @@ function CanvasComponent({
         if (previousTextareaName !== currentTextareaName) {
           setPreviousFieldNames((prev) =>
             new Map(prev).set(component.id, currentTextareaName)
-          );
+          )
         }
 
         return (
@@ -1028,35 +1030,35 @@ function CanvasComponent({
                 const formComponent = findParentForm(
                   state.components,
                   component.id
-                );
+                )
                 if (formComponent) {
                   updateFormField(
                     formComponent.id,
-                    component.content.name || "unnamed",
+                    component.content.name || 'unnamed',
                     e.target.value
-                  );
+                  )
                 }
               }}
               className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent resize-vertical"
             />
           </div>
-        );
+        )
 
-      case "checkbox":
-        const currentCheckboxName = component.content.name || "unnamed";
-        const previousCheckboxName = previousFieldNames.get(component.id);
+      case 'checkbox':
+        const currentCheckboxName = component.content.name || 'unnamed'
+        const previousCheckboxName = previousFieldNames.get(component.id)
 
         if (
           previousCheckboxName &&
           previousCheckboxName !== currentCheckboxName
         ) {
-          const formComponent = findParentForm(state.components, component.id);
+          const formComponent = findParentForm(state.components, component.id)
           if (formComponent) {
             renameFormField(
               formComponent.id,
               previousCheckboxName,
               currentCheckboxName
-            );
+            )
           }
         }
 
@@ -1064,7 +1066,7 @@ function CanvasComponent({
         if (previousCheckboxName !== currentCheckboxName) {
           setPreviousFieldNames((prev) =>
             new Map(prev).set(component.id, currentCheckboxName)
-          );
+          )
         }
 
         return (
@@ -1077,19 +1079,19 @@ function CanvasComponent({
               name={component.content.name}
               type="checkbox"
               defaultChecked={component.content.checked}
-              value={component.content.value || "on"}
+              value={component.content.value || 'on'}
               required={component.content.required}
               onChange={(e) => {
                 const formComponent = findParentForm(
                   state.components,
                   component.id
-                );
+                )
                 if (formComponent) {
                   updateFormField(
                     formComponent.id,
-                    component.content.name || "unnamed",
+                    component.content.name || 'unnamed',
                     e.target.checked
-                  );
+                  )
                 }
               }}
               className="h-4 w-4 text-primary focus:ring-ring border-input rounded"
@@ -1104,20 +1106,20 @@ function CanvasComponent({
               )}
             </label>
           </div>
-        );
+        )
 
-      case "select":
-        const currentSelectName = component.content.name || "unnamed";
-        const previousSelectName = previousFieldNames.get(component.id);
+      case 'select':
+        const currentSelectName = component.content.name || 'unnamed'
+        const previousSelectName = previousFieldNames.get(component.id)
 
         if (previousSelectName && previousSelectName !== currentSelectName) {
-          const formComponent = findParentForm(state.components, component.id);
+          const formComponent = findParentForm(state.components, component.id)
           if (formComponent) {
             renameFormField(
               formComponent.id,
               previousSelectName,
               currentSelectName
-            );
+            )
           }
         }
 
@@ -1125,12 +1127,12 @@ function CanvasComponent({
         if (previousSelectName !== currentSelectName) {
           setPreviousFieldNames((prev) =>
             new Map(prev).set(component.id, currentSelectName)
-          );
+          )
         }
 
         const selectOptions = Array.isArray(component.content.options)
           ? component.content.options
-          : [];
+          : []
 
         return (
           <div
@@ -1157,13 +1159,13 @@ function CanvasComponent({
                 const formComponent = findParentForm(
                   state.components,
                   component.id
-                );
+                )
                 if (formComponent) {
                   updateFormField(
                     formComponent.id,
-                    component.content.name || "unnamed",
+                    component.content.name || 'unnamed',
                     e.target.value
-                  );
+                  )
                 }
               }}
               className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
@@ -1175,36 +1177,36 @@ function CanvasComponent({
               )}
               {selectOptions.map((option: any, index: number) => {
                 const optionValue =
-                  typeof option === "object"
-                    ? option.value || option.text || ""
-                    : option;
+                  typeof option === 'object'
+                    ? option.value || option.text || ''
+                    : option
                 const optionText =
-                  typeof option === "object"
-                    ? option.text || option.value || "Option"
-                    : option;
+                  typeof option === 'object'
+                    ? option.text || option.value || 'Option'
+                    : option
 
                 return (
                   <option key={index} value={optionValue}>
                     {optionText}
                   </option>
-                );
+                )
               })}
             </select>
           </div>
-        );
+        )
 
-      case "radiogroup":
-        const currentRadioName = component.content.name || "unnamed";
-        const previousRadioName = previousFieldNames.get(component.id);
+      case 'radiogroup':
+        const currentRadioName = component.content.name || 'unnamed'
+        const previousRadioName = previousFieldNames.get(component.id)
 
         if (previousRadioName && previousRadioName !== currentRadioName) {
-          const formComponent = findParentForm(state.components, component.id);
+          const formComponent = findParentForm(state.components, component.id)
           if (formComponent) {
             renameFormField(
               formComponent.id,
               previousRadioName,
               currentRadioName
-            );
+            )
           }
         }
 
@@ -1212,13 +1214,13 @@ function CanvasComponent({
         if (previousRadioName !== currentRadioName) {
           setPreviousFieldNames((prev) =>
             new Map(prev).set(component.id, currentRadioName)
-          );
+          )
         }
 
         const radioOptions = Array.isArray(component.content.options)
           ? component.content.options
-          : [];
-        const isHorizontal = component.content.layout === "horizontal";
+          : []
+        const isHorizontal = component.content.layout === 'horizontal'
 
         return (
           <div
@@ -1235,19 +1237,19 @@ function CanvasComponent({
                 </legend>
                 <div
                   className={`${
-                    isHorizontal ? "flex flex-wrap gap-4" : "space-y-2"
+                    isHorizontal ? 'flex flex-wrap gap-4' : 'space-y-2'
                   }`}
                 >
                   {radioOptions.map((option: any, index: number) => {
                     const optionValue =
-                      typeof option === "object"
-                        ? option.value || option.text || ""
-                        : option;
+                      typeof option === 'object'
+                        ? option.value || option.text || ''
+                        : option
                     const optionText =
-                      typeof option === "object"
-                        ? option.text || option.value || "Option"
-                        : option;
-                    const radioId = `${component.content.name}_${index}`;
+                      typeof option === 'object'
+                        ? option.text || option.value || 'Option'
+                        : option
+                    const radioId = `${component.content.name}_${index}`
 
                     return (
                       <div key={index} className="flex items-center space-x-2">
@@ -1264,13 +1266,13 @@ function CanvasComponent({
                             const formComponent = findParentForm(
                               state.components,
                               component.id
-                            );
+                            )
                             if (formComponent) {
                               updateFormField(
                                 formComponent.id,
-                                component.content.name || "unnamed",
+                                component.content.name || 'unnamed',
                                 e.target.value
-                              );
+                              )
                             }
                           }}
                           className="h-4 w-4 text-primary focus:ring-ring border-input"
@@ -1282,95 +1284,95 @@ function CanvasComponent({
                           {optionText}
                         </label>
                       </div>
-                    );
+                    )
                   })}
                 </div>
               </fieldset>
             )}
           </div>
-        );
+        )
 
-      case "link":
+      case 'link':
         const linkTarget =
-          component.content.target === "_blank" ? "_blank" : "_self";
+          component.content.target === '_blank' ? '_blank' : '_self'
         const linkRel =
-          component.content.target === "_blank"
-            ? "noopener noreferrer"
-            : undefined;
+          component.content.target === '_blank'
+            ? 'noopener noreferrer'
+            : undefined
 
         return (
           <div className={getAlignment(component.content.alignment)}>
             <a
-              href={component.content.href || "#"}
+              href={component.content.href || '#'}
               target={linkTarget}
               rel={linkRel}
               className={`text-foreground hover:opacity-80 transition-opacity cursor-pointer ${
                 component.content.underline !== false
-                  ? "underline"
-                  : "no-underline"
+                  ? 'underline'
+                  : 'no-underline'
               } ${responsiveClasses}`}
               style={inlineStyles}
             >
-              {component.content.text || "Click here"}
+              {component.content.text || 'Click here'}
             </a>
           </div>
-        );
+        )
 
-      case "divider":
-        console.log("[v0] Rendering divider component:", component);
+      case 'divider':
+        console.log('[v0] Rendering divider component:', component)
 
         const getDividerStyle = (style: string) => {
           switch (style) {
-            case "dashed":
-              return "border-dashed";
-            case "dotted":
-              return "border-dotted";
+            case 'dashed':
+              return 'border-dashed'
+            case 'dotted':
+              return 'border-dotted'
             default:
-              return "border-solid";
+              return 'border-solid'
           }
-        };
+        }
 
         const getDividerWidth = (width: string) => {
           switch (width) {
-            case "25%":
-              return "w-1/4";
-            case "50%":
-              return "w-1/2";
-            case "75%":
-              return "w-3/4";
-            case "100%":
+            case '25%':
+              return 'w-1/4'
+            case '50%':
+              return 'w-1/2'
+            case '75%':
+              return 'w-3/4'
+            case '100%':
             default:
-              return "w-full";
+              return 'w-full'
           }
-        };
+        }
 
         const getDividerMargin = (margin: string) => {
           switch (margin) {
-            case "none":
-              return "my-0";
-            case "small":
-              return "my-2";
-            case "medium":
-              return "my-4";
-            case "large":
-              return "my-6";
-            case "xl":
-              return "my-8";
+            case 'none':
+              return 'my-0'
+            case 'small':
+              return 'my-2'
+            case 'medium':
+              return 'my-4'
+            case 'large':
+              return 'my-6'
+            case 'xl':
+              return 'my-8'
             default:
-              return "my-4";
+              return 'my-4'
           }
-        };
+        }
 
-        const dividerColor = component.content.backgroundColor || "#000000";
-        const dividerThickness = component.content.thickness || "2px";
+        const dividerColor = component.content.backgroundColor || '#000000'
+        const dividerThickness = component.content.thickness || '2px'
 
-        console.log("[v0] Divider styles:", {
+        console.log('[v0] Divider styles:', {
           color: dividerColor,
-          thickness: dividerThickness,
-        });
+          thickness: dividerThickness
+        })
 
-        const dividerInlineStyles = { ...inlineStyles };
-        delete dividerInlineStyles.border;
+        const dividerInlineStyles = { ...inlineStyles }
+        delete dividerInlineStyles.border
 
         return (
           <div
@@ -1386,39 +1388,39 @@ function CanvasComponent({
                 ...dividerInlineStyles,
                 borderTopWidth: dividerThickness,
                 borderTopColor: dividerColor,
-                height: 0,
+                height: 0
               }}
             />
           </div>
-        );
+        )
 
-      case "sidebar":
+      case 'sidebar':
         return (
           <aside
             className={`transition-all duration-200 ${responsiveClasses} ${
-              isHovered ? "border-accent bg-accent/10" : ""
+              isHovered ? 'border-accent bg-accent/10' : ''
             } ${
               dragOverContainer?.id === component.id
-                ? "ring-2 ring-blue-500 bg-blue-50/50"
-                : ""
+                ? 'ring-2 ring-blue-500 bg-blue-50/50'
+                : ''
             }`}
             style={inlineStyles}
             onDrop={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setDragOverContainer(null);
+              e.preventDefault()
+              e.stopPropagation()
+              setDragOverContainer(null)
 
               try {
                 const data = JSON.parse(
-                  e.dataTransfer.getData("application/json")
-                );
-                const template = getComponentTemplate(data.type);
+                  e.dataTransfer.getData('application/json')
+                )
+                const template = getComponentTemplate(data.type)
 
                 if (!template) {
                   console.warn(
                     `No template found for component type: ${data.type}`
-                  );
-                  return;
+                  )
+                  return
                 }
 
                 const newComponent = {
@@ -1428,41 +1430,41 @@ function CanvasComponent({
                   styles: {
                     desktop: { ...template.defaultStyles.desktop },
                     tablet: { ...template.defaultStyles.tablet },
-                    mobile: { ...template.defaultStyles.mobile },
-                  },
-                };
+                    mobile: { ...template.defaultStyles.mobile }
+                  }
+                }
 
                 dispatch({
-                  type: "ADD_TO_CONTAINER",
+                  type: 'ADD_TO_CONTAINER',
                   payload: {
                     containerId: component.id,
-                    component: newComponent,
-                  },
-                });
+                    component: newComponent
+                  }
+                })
               } catch (error) {
-                console.error("Error parsing drop data for sidebar:", error);
+                console.error('Error parsing drop data for sidebar:', error)
               }
             }}
             onDragOver={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
+              e.preventDefault()
+              e.stopPropagation()
               setDragOverContainer({
                 id: component.id,
-                type: "Sidebar",
-                name: component.content.title,
-              });
+                type: 'Sidebar',
+                name: component.content.title
+              })
             }}
             onDragLeave={(e) => {
               if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                setDragOverContainer(null);
+                setDragOverContainer(null)
               }
             }}
           >
             {dragOverContainer?.id === component.id && (
               <div className="absolute inset-0 bg-blue-500/10 border-2 border-dashed border-blue-500 rounded-lg flex items-center justify-center z-20">
                 <div className="bg-blue-500 text-white px-3 py-1 rounded-md text-sm font-medium">
-                  Drop component as nested component of{" "}
-                  {component.content.title || "Sidebar"}
+                  Drop component as nested component of{' '}
+                  {component.content.title || 'Sidebar'}
                 </div>
               </div>
             )}
@@ -1486,23 +1488,23 @@ function CanvasComponent({
                       state?.selectedComponentId === childComponent.id
                     }
                     onClick={(e) => {
-                      e?.stopPropagation();
+                      e?.stopPropagation()
                       dispatch({
-                        type: "SELECT_COMPONENT",
-                        payload: { id: childComponent.id },
-                      });
+                        type: 'SELECT_COMPONENT',
+                        payload: { id: childComponent.id }
+                      })
                     }}
                     onDragOver={(e) => e.preventDefault()}
                     onDuplicate={() =>
                       dispatch({
-                        type: "DUPLICATE_COMPONENT",
-                        payload: { id: childComponent.id },
+                        type: 'DUPLICATE_COMPONENT',
+                        payload: { id: childComponent.id }
                       })
                     }
                     onDelete={() =>
                       dispatch({
-                        type: "DELETE_COMPONENT",
-                        payload: { id: childComponent.id },
+                        type: 'DELETE_COMPONENT',
+                        payload: { id: childComponent.id }
                       })
                     }
                     currentBreakpoint={currentBreakpoint}
@@ -1541,37 +1543,37 @@ function CanvasComponent({
               </div>
             )}
           </aside>
-        );
+        )
 
-      case "section":
+      case 'section':
         return (
           <section
             className={`w-full transition-all duration-200 ${getSectionResponsiveClasses(
               component
             )} ${responsiveClasses} ${
-              isHovered ? "border-accent bg-accent/10" : ""
+              isHovered ? 'border-accent bg-accent/10' : ''
             } ${
               dragOverContainer?.id === component.id
-                ? "ring-2 ring-blue-500 bg-blue-50/50"
-                : ""
+                ? 'ring-2 ring-blue-500 bg-blue-50/50'
+                : ''
             }`}
             style={inlineStyles}
             onDrop={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setDragOverContainer(null);
+              e.preventDefault()
+              e.stopPropagation()
+              setDragOverContainer(null)
 
               try {
                 const data = JSON.parse(
-                  e.dataTransfer.getData("application/json")
-                );
-                const template = getComponentTemplate(data.type);
+                  e.dataTransfer.getData('application/json')
+                )
+                const template = getComponentTemplate(data.type)
 
                 if (!template) {
                   console.warn(
                     `No template found for component type: ${data.type}`
-                  );
-                  return;
+                  )
+                  return
                 }
 
                 const newComponent = {
@@ -1581,41 +1583,41 @@ function CanvasComponent({
                   styles: {
                     desktop: { ...template.defaultStyles.desktop },
                     tablet: { ...template.defaultStyles.tablet },
-                    mobile: { ...template.defaultStyles.mobile },
-                  },
-                };
+                    mobile: { ...template.defaultStyles.mobile }
+                  }
+                }
 
                 dispatch({
-                  type: "ADD_TO_CONTAINER",
+                  type: 'ADD_TO_CONTAINER',
                   payload: {
                     containerId: component.id,
-                    component: newComponent,
-                  },
-                });
+                    component: newComponent
+                  }
+                })
               } catch (error) {
-                console.error("Error parsing drop data for section:", error);
+                console.error('Error parsing drop data for section:', error)
               }
             }}
             onDragOver={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
+              e.preventDefault()
+              e.stopPropagation()
               setDragOverContainer({
                 id: component.id,
-                type: "Section",
-                name: component.content.title,
-              });
+                type: 'Section',
+                name: component.content.title
+              })
             }}
             onDragLeave={(e) => {
               if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                setDragOverContainer(null);
+                setDragOverContainer(null)
               }
             }}
           >
             {dragOverContainer?.id === component.id && (
               <div className="absolute inset-0 bg-blue-500/10 border-2 border-dashed border-blue-500 rounded-lg flex items-center justify-center z-20">
                 <div className="bg-blue-500 text-white px-3 py-1 rounded-md text-sm font-medium">
-                  Drop component as nested component of{" "}
-                  {component.content.title || "Section"}
+                  Drop component as nested component of{' '}
+                  {component.content.title || 'Section'}
                 </div>
               </div>
             )}
@@ -1639,23 +1641,23 @@ function CanvasComponent({
                       state?.selectedComponentId === childComponent.id
                     }
                     onClick={(e) => {
-                      e?.stopPropagation();
+                      e?.stopPropagation()
                       dispatch({
-                        type: "SELECT_COMPONENT",
-                        payload: { id: childComponent.id },
-                      });
+                        type: 'SELECT_COMPONENT',
+                        payload: { id: childComponent.id }
+                      })
                     }}
                     onDragOver={(e) => e.preventDefault()}
                     onDuplicate={() =>
                       dispatch({
-                        type: "DUPLICATE_COMPONENT",
-                        payload: { id: childComponent.id },
+                        type: 'DUPLICATE_COMPONENT',
+                        payload: { id: childComponent.id }
                       })
                     }
                     onDelete={() =>
                       dispatch({
-                        type: "DELETE_COMPONENT",
-                        payload: { id: childComponent.id },
+                        type: 'DELETE_COMPONENT',
+                        payload: { id: childComponent.id }
                       })
                     }
                     currentBreakpoint={currentBreakpoint}
@@ -1694,35 +1696,35 @@ function CanvasComponent({
               </div>
             )}
           </section>
-        );
+        )
 
-      case "container":
+      case 'container':
         return (
           <div
             className={`w-full min-h-[200px] transition-all duration-200 ${responsiveClasses} ${
-              isHovered ? "border-accent bg-accent/10" : ""
+              isHovered ? 'border-accent bg-accent/10' : ''
             } ${
               dragOverContainer?.id === component.id
-                ? "ring-2 ring-blue-500 bg-blue-50/50"
-                : ""
+                ? 'ring-2 ring-blue-500 bg-blue-50/50'
+                : ''
             }`}
             style={inlineStyles}
             onDrop={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setDragOverContainer(null);
+              e.preventDefault()
+              e.stopPropagation()
+              setDragOverContainer(null)
 
               try {
                 const data = JSON.parse(
-                  e.dataTransfer.getData("application/json")
-                );
-                const template = getComponentTemplate(data.type);
+                  e.dataTransfer.getData('application/json')
+                )
+                const template = getComponentTemplate(data.type)
 
                 if (!template) {
                   console.warn(
                     `No template found for component type: ${data.type}`
-                  );
-                  return;
+                  )
+                  return
                 }
 
                 const newComponent = {
@@ -1732,33 +1734,33 @@ function CanvasComponent({
                   styles: {
                     desktop: { ...template.defaultStyles.desktop },
                     tablet: { ...template.defaultStyles.tablet },
-                    mobile: { ...template.defaultStyles.mobile },
-                  },
-                };
+                    mobile: { ...template.defaultStyles.mobile }
+                  }
+                }
 
                 dispatch({
-                  type: "ADD_TO_CONTAINER",
+                  type: 'ADD_TO_CONTAINER',
                   payload: {
                     containerId: component.id,
-                    component: newComponent,
-                  },
-                });
+                    component: newComponent
+                  }
+                })
               } catch (error) {
-                console.error("Error parsing drop data for container:", error);
+                console.error('Error parsing drop data for container:', error)
               }
             }}
             onDragOver={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
+              e.preventDefault()
+              e.stopPropagation()
               setDragOverContainer({
                 id: component.id,
-                type: "Container",
-                name: component.content.title,
-              });
+                type: 'Container',
+                name: component.content.title
+              })
             }}
             onDragLeave={(e) => {
               if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                setDragOverContainer(null);
+                setDragOverContainer(null)
               }
             }}
           >
@@ -1779,23 +1781,23 @@ function CanvasComponent({
                       state?.selectedComponentId === childComponent.id
                     }
                     onClick={(e) => {
-                      e?.stopPropagation();
+                      e?.stopPropagation()
                       dispatch({
-                        type: "SELECT_COMPONENT",
-                        payload: { id: childComponent.id },
-                      });
+                        type: 'SELECT_COMPONENT',
+                        payload: { id: childComponent.id }
+                      })
                     }}
                     onDragOver={(e) => e.preventDefault()}
                     onDuplicate={() =>
                       dispatch({
-                        type: "DUPLICATE_COMPONENT",
-                        payload: { id: childComponent.id },
+                        type: 'DUPLICATE_COMPONENT',
+                        payload: { id: childComponent.id }
                       })
                     }
                     onDelete={() =>
                       dispatch({
-                        type: "DELETE_COMPONENT",
-                        payload: { id: childComponent.id },
+                        type: 'DELETE_COMPONENT',
+                        payload: { id: childComponent.id }
                       })
                     }
                     currentBreakpoint={currentBreakpoint}
@@ -1836,37 +1838,37 @@ function CanvasComponent({
               </div>
             )}
           </div>
-        );
+        )
 
-      case "grid":
+      case 'grid':
         return (
           <div
             className={`grid min-h-[200px] transition-all duration-200 ${getGridResponsiveClasses(
               component
             )} ${responsiveClasses} ${
-              isHovered ? "border-accent bg-accent/10" : ""
+              isHovered ? 'border-accent bg-accent/10' : ''
             } ${
               dragOverContainer?.id === component.id
-                ? "ring-2 ring-blue-500 bg-blue-50/50"
-                : ""
+                ? 'ring-2 ring-blue-500 bg-blue-50/50'
+                : ''
             }`}
             style={inlineStyles}
             onDrop={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setDragOverContainer(null);
+              e.preventDefault()
+              e.stopPropagation()
+              setDragOverContainer(null)
 
               try {
                 const data = JSON.parse(
-                  e.dataTransfer.getData("application/json")
-                );
-                const template = getComponentTemplate(data.type);
+                  e.dataTransfer.getData('application/json')
+                )
+                const template = getComponentTemplate(data.type)
 
                 if (!template) {
                   console.warn(
                     `No template found for component type: ${data.type}`
-                  );
-                  return;
+                  )
+                  return
                 }
 
                 const newComponent = {
@@ -1876,33 +1878,33 @@ function CanvasComponent({
                   styles: {
                     desktop: { ...template.defaultStyles.desktop },
                     tablet: { ...template.defaultStyles.tablet },
-                    mobile: { ...template.defaultStyles.mobile },
-                  },
-                };
+                    mobile: { ...template.defaultStyles.mobile }
+                  }
+                }
 
                 dispatch({
-                  type: "ADD_TO_CONTAINER",
+                  type: 'ADD_TO_CONTAINER',
                   payload: {
                     containerId: component.id,
-                    component: newComponent,
-                  },
-                });
+                    component: newComponent
+                  }
+                })
               } catch (error) {
-                console.error("Error parsing drop data for grid:", error);
+                console.error('Error parsing drop data for grid:', error)
               }
             }}
             onDragOver={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
+              e.preventDefault()
+              e.stopPropagation()
               setDragOverContainer({
                 id: component.id,
-                type: "Grid",
-                name: component.content.title,
-              });
+                type: 'Grid',
+                name: component.content.title
+              })
             }}
             onDragLeave={(e) => {
               if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                setDragOverContainer(null);
+                setDragOverContainer(null)
               }
             }}
           >
@@ -1923,23 +1925,23 @@ function CanvasComponent({
                       state?.selectedComponentId === childComponent.id
                     }
                     onClick={(e) => {
-                      e?.stopPropagation();
+                      e?.stopPropagation()
                       dispatch({
-                        type: "SELECT_COMPONENT",
-                        payload: { id: childComponent.id },
-                      });
+                        type: 'SELECT_COMPONENT',
+                        payload: { id: childComponent.id }
+                      })
                     }}
                     onDragOver={(e) => e.preventDefault()}
                     onDuplicate={() =>
                       dispatch({
-                        type: "DUPLICATE_COMPONENT",
-                        payload: { id: childComponent.id },
+                        type: 'DUPLICATE_COMPONENT',
+                        payload: { id: childComponent.id }
                       })
                     }
                     onDelete={() =>
                       dispatch({
-                        type: "DELETE_COMPONENT",
-                        payload: { id: childComponent.id },
+                        type: 'DELETE_COMPONENT',
+                        payload: { id: childComponent.id }
                       })
                     }
                     currentBreakpoint={currentBreakpoint}
@@ -1977,10 +1979,10 @@ function CanvasComponent({
               </div>
             )}
           </div>
-        );
+        )
 
-      case "heading":
-        const HeadingTag = component.content.level || "h2";
+      case 'heading':
+        const HeadingTag = component.content.level || 'h2'
         return (
           <HeadingTag
             className={`font-bold text-foreground ${getHeadingResponsiveSize(
@@ -1990,11 +1992,11 @@ function CanvasComponent({
             )} ${responsiveClasses}`}
             style={inlineStyles}
           >
-            {component.content.text || "Your Heading Here"}
+            {component.content.text || 'Your Heading Here'}
           </HeadingTag>
-        );
+        )
 
-      case "paragraph":
+      case 'paragraph':
         return (
           <p
             className={`text-foreground leading-relaxed ${getAlignment(
@@ -2003,26 +2005,26 @@ function CanvasComponent({
             style={inlineStyles}
           >
             {component.content.text ||
-              "Your paragraph text goes here. Click to edit this content."}
+              'Your paragraph text goes here. Click to edit this content.'}
           </p>
-        );
+        )
 
-      case "list":
-        const ListTag = component.content.type === "ordered" ? "ol" : "ul";
+      case 'list':
+        const ListTag = component.content.type === 'ordered' ? 'ol' : 'ul'
         const items = Array.isArray(component.content.items)
           ? component.content.items
-          : (component.content.items || "")
-              .split("\n")
-              .filter((item) => item.trim());
+          : (component.content.items || '')
+              .split('\n')
+              .filter((item) => item.trim())
 
         return (
           <ListTag
             className={`text-foreground leading-relaxed ${getAlignment(
               component.content.alignment
             )} ${responsiveClasses} ${
-              component.content.type === "ordered"
-                ? "list-decimal"
-                : "list-disc"
+              component.content.type === 'ordered'
+                ? 'list-decimal'
+                : 'list-disc'
             } list-inside space-y-1`}
             style={inlineStyles}
           >
@@ -2040,21 +2042,21 @@ function CanvasComponent({
               </>
             )}
           </ListTag>
-        );
+        )
 
-      case "quote":
+      case 'quote':
         const getQuoteStyle = (style: string) => {
           switch (style) {
-            case "minimal":
-              return "border-l-2 border-gray-300 pl-4 italic";
-            case "bordered":
-              return "border border-gray-200 p-4 rounded-lg bg-gray-50 italic";
-            case "highlighted":
-              return "bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg italic";
+            case 'minimal':
+              return 'border-l-2 border-gray-300 pl-4 italic'
+            case 'bordered':
+              return 'border border-gray-200 p-4 rounded-lg bg-gray-50 italic'
+            case 'highlighted':
+              return 'bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg italic'
             default:
-              return "bg-blue-50 border-l-4 border-blue-500 pl-6 bg-gray-50 p-4 rounded-md italic";
+              return 'bg-blue-50 border-l-4 border-blue-500 pl-6 bg-gray-50 p-4 rounded-md italic'
           }
-        };
+        }
 
         return (
           <blockquote
@@ -2066,7 +2068,7 @@ function CanvasComponent({
             <p className="text-lg leading-relaxed mb-3">
               "
               {component.content.text ||
-                "This is an inspiring quote that adds credibility and engagement to your content."}
+                'This is an inspiring quote that adds credibility and engagement to your content.'}
               "
             </p>
             {component.content.author && (
@@ -2075,33 +2077,33 @@ function CanvasComponent({
               </footer>
             )}
           </blockquote>
-        );
+        )
 
-      case "image":
+      case 'image':
         const imageStyles = {
           ...inlineStyles,
           ...(component.content.width &&
-            component.content.width !== "auto" && {
-              width: component.content.width,
+            component.content.width !== 'auto' && {
+              width: component.content.width
             }),
           ...(component.content.height &&
-            component.content.height !== "auto" && {
-              height: component.content.height,
-            }),
-        };
+            component.content.height !== 'auto' && {
+              height: component.content.height
+            })
+        }
 
         return (
           <div className={getAlignment(component.content.alignment)}>
             <img
               src={
-                component.content.src || "https://via.placeholder.com/500x300"
+                component.content.src || 'https://via.placeholder.com/500x300'
               }
-              alt={component.content.alt || "Placeholder Image"}
+              alt={component.content.alt || 'Placeholder Image'}
               className={`max-w-full ${
-                component.content.width === "auto" &&
-                component.content.height === "auto"
-                  ? "h-auto"
-                  : ""
+                component.content.width === 'auto' &&
+                component.content.height === 'auto'
+                  ? 'h-auto'
+                  : ''
               } ${responsiveClasses}`}
               style={imageStyles}
             />
@@ -2111,9 +2113,9 @@ function CanvasComponent({
               </p>
             )}
           </div>
-        );
+        )
 
-      case "button":
+      case 'button':
         return (
           <div className={getAlignment(component.content.alignment)}>
             <Button
@@ -2122,23 +2124,23 @@ function CanvasComponent({
               className={responsiveClasses}
               style={inlineStyles}
             >
-              {component.content.text || "Click me"}
+              {component.content.text || 'Click me'}
             </Button>
           </div>
-        );
+        )
 
-      case "video":
+      case 'video':
         const getYouTubeEmbedUrl = (url: string) => {
           const videoId = url.match(
             /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/
-          );
-          return videoId ? `https://www.youtube.com/embed/${videoId[1]}` : url;
-        };
+          )
+          return videoId ? `https://www.youtube.com/embed/${videoId[1]}` : url
+        }
 
         const videoSrc =
-          component.content.type === "youtube"
-            ? getYouTubeEmbedUrl(component.content.src || "")
-            : component.content.src || "";
+          component.content.type === 'youtube'
+            ? getYouTubeEmbedUrl(component.content.src || '')
+            : component.content.src || ''
 
         return (
           <div
@@ -2147,12 +2149,12 @@ function CanvasComponent({
             )} ${responsiveClasses}`}
             style={inlineStyles}
           >
-            {component.content.type === "youtube" ? (
+            {component.content.type === 'youtube' ? (
               <iframe
                 src={videoSrc}
-                title={component.content.title || "Video Player"}
-                width={component.content.width || "100%"}
-                height={component.content.height || "315px"}
+                title={component.content.title || 'Video Player'}
+                width={component.content.width || '100%'}
+                height={component.content.height || '315px'}
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
@@ -2161,9 +2163,9 @@ function CanvasComponent({
             ) : (
               <video
                 src={videoSrc}
-                title={component.content.title || "Video Player"}
-                width={component.content.width || "100%"}
-                height={component.content.height || "315px"}
+                title={component.content.title || 'Video Player'}
+                width={component.content.width || '100%'}
+                height={component.content.height || '315px'}
                 controls={component.content.controls !== false}
                 autoPlay={component.content.autoplay === true}
                 loop={component.content.loop === true}
@@ -2174,92 +2176,92 @@ function CanvasComponent({
               </video>
             )}
           </div>
-        );
+        )
 
-      case "fanregistration":
+      case 'fanregistration':
         console.log(
-          "[v0] FanRegistration alignment:",
+          '[v0] FanRegistration alignment:',
           component.content.alignment
-        );
+        )
         console.log(
-          "[v0] FanRegistration getAlignment result:",
-          getAlignment(component.content.alignment || "left")
-        );
+          '[v0] FanRegistration getAlignment result:',
+          getAlignment(component.content.alignment || 'left')
+        )
 
         const countries = Array.isArray(component.content.countries)
           ? component.content.countries
           : [
-              "United States",
-              "Canada",
-              "United Kingdom",
-              "Australia",
-              "Germany",
-              "France",
-              "Spain",
-              "Italy",
-              "Japan",
-              "Brazil",
-              "Mexico",
-              "Other",
-            ];
+              'United States',
+              'Canada',
+              'United Kingdom',
+              'Australia',
+              'Germany',
+              'France',
+              'Spain',
+              'Italy',
+              'Japan',
+              'Brazil',
+              'Mexico',
+              'Other'
+            ]
 
         const handleFanRegistrationSubmit = async (e: React.FormEvent) => {
-          e.preventDefault();
-          const formData = new FormData(e.target as HTMLFormElement);
+          e.preventDefault()
+          const formData = new FormData(e.target as HTMLFormElement)
           const data = {
-            name: formData.get("name"),
-            email: formData.get("email"),
-            country: formData.get("country"),
-            city: formData.get("city"),
-            zipCode: formData.get("zipCode"),
-          };
+            name: formData.get('name'),
+            email: formData.get('email'),
+            country: formData.get('country'),
+            city: formData.get('city'),
+            zipCode: formData.get('zipCode')
+          }
 
-          console.log("[v0] Fan Registration submitted:", data);
+          console.log('[v0] Fan Registration submitted:', data)
 
           // Validate required fields
           if (!data.name || !data.email || !data.country) {
-            alert("Please fill in all required fields");
-            return;
+            alert('Please fill in all required fields')
+            return
           }
 
           // Validate email format
-          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
           if (!emailRegex.test(data.email as string)) {
-            alert("Please enter a valid email address");
-            return;
+            alert('Please enter a valid email address')
+            return
           }
 
           try {
             const response = await fetch(
               component.content.submitEndpoint ||
-                "https://api.example.com/fan-registration",
+                'https://api.example.com/fan-registration',
               {
-                method: "POST",
+                method: 'POST',
                 headers: {
-                  "Content-Type": "application/json",
+                  'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(data),
+                body: JSON.stringify(data)
               }
-            );
+            )
 
             if (response.ok) {
               alert(
-                component.content.successMessage || "Thank you for registering!"
-              );
-              (e.target as HTMLFormElement).reset();
+                component.content.successMessage || 'Thank you for registering!'
+              )
+              ;(e.target as HTMLFormElement).reset()
             } else {
-              alert("Registration failed. Please try again.");
+              alert('Registration failed. Please try again.')
             }
           } catch (error) {
-            console.error("[v0] Fan Registration error:", error);
-            alert("Registration failed. Please try again.");
+            console.error('[v0] Fan Registration error:', error)
+            alert('Registration failed. Please try again.')
           }
-        };
+        }
 
         return (
           <div
             className={`w-full m-auto ${getAlignment(
-              component.content.alignment || "left"
+              component.content.alignment || 'left'
             )} ${responsiveClasses}`}
             style={inlineStyles}
           >
@@ -2267,8 +2269,8 @@ function CanvasComponent({
               onSubmit={handleFanRegistrationSubmit}
               className="space-y-6 p-8 bg-white border border-gray-200 rounded-xl shadow-lg w-full max-w-2xl"
               style={{
-                backgroundColor: component.content.backgroundColor || "#ffffff",
-                borderColor: component.content.borderColor || "#e5e7eb",
+                backgroundColor: component.content.backgroundColor || '#ffffff',
+                borderColor: component.content.borderColor || '#e5e7eb'
               }}
             >
               {component.content.title && (
@@ -2375,27 +2377,27 @@ function CanvasComponent({
                 type="submit"
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
-                {component.content.submitButtonText || "Register Now"}
+                {component.content.submitButtonText || 'Register Now'}
               </button>
             </form>
           </div>
-        );
+        )
 
       default:
         return (
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
             Unknown component type: {component.type}
           </div>
-        );
+        )
     }
-  };
+  }
 
   return (
     <div
       className={cn(
-        "relative group",
-        isSelected && "ring-2 ring-accent ring-offset-2",
-        isHovered && "ring-1 ring-accent ring-offset-1"
+        'relative group',
+        isSelected && 'ring-2 ring-accent ring-offset-2',
+        isHovered && 'ring-1 ring-accent ring-offset-1'
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -2407,8 +2409,8 @@ function CanvasComponent({
         <div className="absolute top-2 right-2 flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
             onClick={(e) => {
-              e.stopPropagation();
-              onDuplicate();
+              e.stopPropagation()
+              onDuplicate()
             }}
             className="p-1 rounded-md bg-white hover:bg-gray-100"
           >
@@ -2428,8 +2430,8 @@ function CanvasComponent({
           </button>
           <button
             onClick={(e) => {
-              e.stopPropagation();
-              onDelete();
+              e.stopPropagation()
+              onDelete()
             }}
             className="p-1 rounded-md bg-white hover:bg-gray-100"
           >
@@ -2450,5 +2452,5 @@ function CanvasComponent({
         </div>
       )}
     </div>
-  );
+  )
 }

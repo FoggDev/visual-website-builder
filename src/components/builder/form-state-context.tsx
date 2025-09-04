@@ -1,7 +1,7 @@
-"use client"
+'use client'
 
-import type React from "react"
-import { createContext, useContext, useState } from "react"
+import type React from 'react'
+import { createContext, useContext, useState } from 'react'
 
 interface FormState {
   [formId: string]: {
@@ -13,7 +13,11 @@ interface FormStateContextType {
   formStates: FormState
   updateFormField: (formId: string, fieldName: string, value: any) => void
   getFormState: (formId: string) => Record<string, any>
-  renameFormField: (formId: string, oldFieldName: string, newFieldName: string) => void
+  renameFormField: (
+    formId: string,
+    oldFieldName: string,
+    newFieldName: string
+  ) => void
 }
 
 const FormStateContext = createContext<FormStateContextType | null>(null)
@@ -22,13 +26,13 @@ export function FormStateProvider({ children }: { children: React.ReactNode }) {
   const [formStates, setFormStates] = useState<FormState>({})
 
   const updateFormField = (formId: string, fieldName: string, value: any) => {
-    console.log("[v0] Updating form field:", { formId, fieldName, value })
+    console.log('[v0] Updating form field:', { formId, fieldName, value })
     setFormStates((prev) => ({
       ...prev,
       [formId]: {
         ...prev[formId],
-        [fieldName]: value,
-      },
+        [fieldName]: value
+      }
     }))
   }
 
@@ -36,8 +40,16 @@ export function FormStateProvider({ children }: { children: React.ReactNode }) {
     return formStates[formId] || {}
   }
 
-  const renameFormField = (formId: string, oldFieldName: string, newFieldName: string) => {
-    console.log("[v0] Renaming form field:", { formId, oldFieldName, newFieldName })
+  const renameFormField = (
+    formId: string,
+    oldFieldName: string,
+    newFieldName: string
+  ) => {
+    console.log('[v0] Renaming form field:', {
+      formId,
+      oldFieldName,
+      newFieldName
+    })
     setFormStates((prev) => {
       const formState = prev[formId] || {}
       const oldValue = formState[oldFieldName]
@@ -51,13 +63,15 @@ export function FormStateProvider({ children }: { children: React.ReactNode }) {
 
       return {
         ...prev,
-        [formId]: newFormState,
+        [formId]: newFormState
       }
     })
   }
 
   return (
-    <FormStateContext.Provider value={{ formStates, updateFormField, getFormState, renameFormField }}>
+    <FormStateContext.Provider
+      value={{ formStates, updateFormField, getFormState, renameFormField }}
+    >
       {children}
     </FormStateContext.Provider>
   )
@@ -66,7 +80,7 @@ export function FormStateProvider({ children }: { children: React.ReactNode }) {
 export function useFormState() {
   const context = useContext(FormStateContext)
   if (!context) {
-    throw new Error("useFormState must be used within a FormStateProvider")
+    throw new Error('useFormState must be used within a FormStateProvider')
   }
   return context
 }
